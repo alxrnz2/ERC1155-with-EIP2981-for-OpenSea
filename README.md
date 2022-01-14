@@ -2,10 +2,10 @@
 
 ### Overview
 
-This repo contains [OpenZeppelin's](https://docs.openzeppelin.com/contracts/3.x/erc1155) standard [ERC 1155](https://eips.ethereum.org/EIPS/eip-1155) contracts, slightly modified with:
-1) the [EIP 2981](https://eips.ethereum.org/EIPS/eip-2981) royalties standard;
-2) additions for OpenSea like [whitelisting and meta-transactions](https://docs.opensea.io/docs/polygon-basic-integration) to reduce trading friction on Polygon, an [ERC 721](https://eips.ethereum.org/EIPS/eip-721)-like token metadata, and [contract-level metadata](https://docs.opensea.io/docs/contract-level-metadata) that collectively streamline listing; and
-3) hard caps on token and edition supply.
+This repo contains [OpenZeppelin's](https://docs.openzeppelin.com/contracts/3.x/erc1155) standard [ERC 1155](https://eips.ethereum.org/EIPS/eip-1155) contracts, slightly modified for:
+1) [EIP 2981](https://eips.ethereum.org/EIPS/eip-2981) royalties standard.
+2) OpenSea suggested additions like [whitelisting and meta-transactions](https://docs.opensea.io/docs/polygon-basic-integration) to reduce trading friction on Polygon, a `PermanentURI' event to signla frozen metadata, an [ERC 721](https://eips.ethereum.org/EIPS/eip-721)-like token metadata return, and [contract-level metadata](https://docs.opensea.io/docs/contract-level-metadata) that collectively streamline listing.
+3) Hard caps on token and edition supply.
 
 ### Why use this repo?
 
@@ -15,7 +15,7 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 
 **EIP 2981**: As of January 2022, Ethereum and Polygon NFT royalties are set by exchanges, which makes royalty enforcement challenging. EIP 2981 is a royalty standard that will likely be implemented across NFT exchanges in the near future. The standard's `royaltyInfo` function returns a public address for the intended royalty recipient and a royalty amount in the sale currency. An exchange would query the function with the NFT's `tokenId` and sale price, and then remit royalties accordingly. Note: the royalty payment isn't built into the contract's transfer functions, so we'd still rely on exchanges to certain extent.
 
-**Easy OpenSea import**: If you're looking to list on OpenSea, they recommend a few additions to the OpenZeppelin standard contracts to streamline integration. Whitelisting the OpenSea proxy contract address enables NFT buyers to list on OpenSea without paying gas fees. Meta-transactions via `ContextMixin` enable gasless user transactions. An override of the `uri` function (metadata) ensures OpenSea correctly caches NFT metadata and images without needing to rely on the standard ERC1155 id substitution format. Contract-level metadata pre-populates basic information about the collection upon import.
+**Easy OpenSea import**: If you're looking to list on OpenSea, they recommend a few additions to the OpenZeppelin standard contracts to streamline integration. Whitelisting the OpenSea proxy contract address enables NFT buyers to list on OpenSea without paying gas fees. Meta-transactions via `ContextMixin` enable gasless user transactions. `PermanentURI` signals forzen token metadata to OpenSea. An override of the `uri` function (metadata) ensures OpenSea correctly caches NFT metadata and images without needing to rely on the standard ERC1155 ID substitution format. Contract-level metadata pre-populates basic information about the collection upon import.
 
 ### High-level instructions
 
