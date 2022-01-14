@@ -4,8 +4,8 @@
 
 This repo contains [OpenZeppelin's](https://docs.openzeppelin.com/contracts/3.x/erc1155) standard [ERC 1155](https://eips.ethereum.org/EIPS/eip-1155) contracts, slightly modified for:
 1) [EIP 2981](https://eips.ethereum.org/EIPS/eip-2981) royalties standard.
-2) OpenSea suggested additions like [whitelisting and meta-transactions](https://docs.opensea.io/docs/polygon-basic-integration) to reduce trading friction on Polygon, a `PermanentURI' event to signla frozen metadata, an [ERC 721](https://eips.ethereum.org/EIPS/eip-721)-like token metadata return, and [contract-level metadata](https://docs.opensea.io/docs/contract-level-metadata) that collectively streamline listing.
-3) Hard caps on token and edition supply.
+2) OpenSea suggested additions like [whitelisting and meta-transactions](https://docs.opensea.io/docs/polygon-basic-integration) to reduce trading friction on Polygon, a `PermanentURI` event to signal frozen metadata, an [ERC 721](https://eips.ethereum.org/EIPS/eip-721)-like token metadata return, and [contract-level metadata](https://docs.opensea.io/docs/contract-level-metadata) that collectively streamline listing.
+4) Hard caps on token and edition supply.
 
 ### Why use this repo?
 
