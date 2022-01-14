@@ -1,4 +1,4 @@
-# ERC1155 with EIP2981 royalties
+# ERC1155 with EIP2981 royalties and OpenSea-specific additions
 
 ### Overview
 
