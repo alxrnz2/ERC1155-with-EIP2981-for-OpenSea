@@ -19,9 +19,9 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 
 ### High-level instructions
 
-1) **Upload/pin token metadata through a decentralized service**. We use IPFS and Filecoin in this repo, but you can use other alternatives like Arweave.
-2) **Adjust and/or update the smart contracts for your project's needs**. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images.
-3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We'll explain steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment.
+1) **Upload/pin token metadata through a decentralized service**. We used IPFS and Filecoin in this repo via NFT.storage; Arweave is another popular solution.
+2) **Adjust and/or update the smart contracts for your project's needs**. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as you see fit for your project.
+3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We'll explain steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage, or 
 4) **Verify your contract on the applicable block explorer**. We'll show you how to verify contracts using HardHat, one easy option for verification.
 5) **Import your contract to OpenSea**. Once your contract is deployed and verified, you can quickly import to OpenSea via [Get Listed](https://opensea.io/get-listed). You just need the contract address, which you can copy from the block explorer. You'll also need to sign into OpenSea with the contract's owner address before adjusting collection information.
 
@@ -54,7 +54,7 @@ import "./@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 The best practice with any standard implementation is to start with an interface. The `IERC2981.sol` `royaltyInfo` function is then overriden in `ParkPics.sol` (see below).
 
-**royaltyInfo function in `ParkPics.sol`**:
+**`royaltyInfo` function in `ParkPics.sol`**:
 ```
 function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view override
         returns (address receiver, uint256 royaltyAmount)
@@ -63,11 +63,11 @@ function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view overrid
     }
 ```
 
-When called, this function returns royalty recipient and amount, indifferent as to sale currency. Over time, we expect reputable NFT exchanges will implement this standard, although as of January 2022, most do not.
+When called, this function returns royalty recipient and amount, indifferent as to sale currency. We set royalties at 10% or 1,000 basis points; to set a different percentage, just adjust the `1000` to your desired royalty in basis points.
 
-Note: royalties are not built into the contract's `transfer` functions, which do not include a sale price. Instead, the NFT owner delegates the ability to transfer to exchanges via the `setApprovalForAll` function in `ERC1155.sol`, then the exchange initiates (1) a token transfer once the listing price is fulfilled and (2) royalty payout, which currently is based on information provided to each exchange individually (for OpenSea, the contract owner will populate royalty recipient and amount when updating collection information on OpenSea).
+Note: royalties are not built into the contract's `transfer` functions, which do not have an input for sales price. Instead, the NFT owner delegates the ability to transfer to NFT exchanges via the `setApprovalForAll` function in `ERC1155.sol`, then the exchange initiates a (1) token transfer once the listing price is fulfilled and (2) royalty payout, which is currently based on information provided to each exchange by the collection creator (for OpenSea, the contract owner needs to populate royalty recipient and amount manually on their site when updating collection information).
 
-Reputable exchanges tend to follow community standards, which we expect EIP 2981 to become in the near future. Hence, we're including these functions for forward compatibility.
+Reputable exchanges tend to follow community standards, which we expect EIP 2981 to become in the near future. Thus, we're including these functions for forward compatibility, even if most exchanges don't follow EIP 2981 today (January 2022).
 
 **supportsInterface override in `ParkPics.sol`**:
 ```
@@ -87,7 +87,7 @@ function supportsInterface(bytes4 interfaceId)
 
 This function signals that the contract is compatible with EIP 2981, in addition to ERC 1155 and ERC 165 (via `super`).
 
-**Maintain flexibilty to change recipient in `ParkPics.sol`**:
+**Maintain flexibilty to change royalty recipient in `ParkPics.sol`**:
 ```
 address private _recipient;
 ...
@@ -106,11 +106,11 @@ function setRoyalties(address newRecipient) external onlyOwner {
 }
 ```
 
-These additions create a private varible for royalty recipient address, define that address as the contract owner in the constructor, and create an `onlyOwner` function to update the recipient in the future. If you don't need this flexibility, feel free to delete the variable, contructor definition, and functions, and replace `_recipient` in the `royaltyInfo` function with a static public address for the intended recipient.
+These additions create a private varible for royalty recipient address, define that address as the contract owner upon deployment in the constructor, and create an `onlyOwner` function to update that recipient address in the future. If you don't need this flexibility, feel free to delete the variable, constructor definition, and `setRoyalties` functions, and replace `_recipient` in the `royaltyInfo` function with a static public address for the desired recipient.
 
 ### OpenSea-specific changes
 
-The OpenSea additions supplement with contracts with whitelisting, meta-transactions, token metadata override, and contract-level metadata.
+These OpenSea additions enable whitelisting, meta-transactions, a permanent metadata event, token metadata override, and contract-level metadata. Some of these additions may be redundant given recent OpenSea infrastructure changes, but to cover all bases, we pieced together and implemented each per OpenSea's developer docs.
 
 **Whitelisting in `ERC1155.sol`**:
 ```
@@ -124,9 +124,9 @@ function isApprovedForAll(...) ... (...) {
 }
 ```
 
-The `if` addition above automatically approves a token owner's listing on OpenSea without needing to pay addition gas fees.
+The `if` addition above automatically approves a token owner's listing on OpenSea without requiring the owner to pay gas fees for the approval transaction. If you'd like to add additional marketplace addresses, you can use the `||` operator ("or" operator in Solidity) to add those marketplace addresses to the `if` statement.
 
-**Meta-transactions in `ParkPics.sol` and import of `ContextMixin.sol`**:
+**Meta-transactions in `ParkPics.sol` via import of `ContextMixin.sol`**:
 ```
 import "./@openzeppelin/contracts/utils/ContextMixin.sol";
 ...
@@ -135,7 +135,7 @@ function _msgSender() internal override view returns (address) {
 }
 ```
 
-After adding `ContextMixin.sol` to `contract/utils`, we import and add a function to override `_msgSender`. Learn more from [OpenSea](https://docs.opensea.io/docs/polygon-basic-integration) about gas-less transactions.
+After adding `ContextMixin.sol` to `contract/utils`, we import that contract to the token contract and add a function to override `_msgSender`. Learn more from [OpenSea](https://docs.opensea.io/docs/polygon-basic-integration) about gas-less transactions.
 
 **Token metadata pin and `PermanentURI` event in `ERC1155.sol`**:
 ```
@@ -148,7 +148,7 @@ event PermanentURI(string _value, uint256 indexed _id);
 constructor(string memory uri_) {
         ...
         // Set metadata pin for uri override and permanentURI events
-        _uriBase = "ipfs://bafybeicvbipj7n6zkphi7u5tu4gmu7oubi7nt5s2fjvkzxn7ggr4fjv2jy/"; // IPFS for ParkPics collection
+        _uriBase = "ipfs://bafybeicvbipj7n6zkphi7u5tu4gmu7oubi7nt5s2fjvkzxn7ggr4fjv2jy/"; // IPFS base for ParkPics collection
         ...
 }
 ...
@@ -170,9 +170,9 @@ function _mintBatch(...) ... {
 }
 ```
 
-OpenSea looks for a `PermanentURI` event to determine a token's metadata is frozen. Learn more [here](https://docs.opensea.io/docs/metadata-standards).
+OpenSea looks for a `PermanentURI` event to determine if a token's metadata is frozen. The event simply emits the URI for each token as they're minted. Learn more [here](https://docs.opensea.io/docs/metadata-standards).
 
-**Token metadata override in `ParkPics.sol`**:
+**Token metadata return override in `ParkPics.sol`**:
 ```
 function uri(uint256 tokenId) override public view returns (string memory) {
         ...
@@ -180,29 +180,27 @@ function uri(uint256 tokenId) override public view returns (string memory) {
 }
 ```
 
-Rather than relying on marketplaces to support the ERC 1155 [ID substitution method](https://docs.openzeppelin.com/contracts/3.x/api/token/erc1155#IERC1155MetadataURI) for token metadata, we overrode the function to return an IPFS pin for the token's applicable json file. For our function to work properly, metadata needs to be stored in a Content-Addressed Archive (CAR). Use this [tool](http://car.ipfs.io.ipns.localhost:8080/) to convert metadata into an IPFS CARs.
+Rather than relying on marketplaces to support the ERC 1155 [ID substitution method](https://docs.openzeppelin.com/contracts/3.x/api/token/erc1155#IERC1155MetadataURI) for token metadata, we overrode the function to return an IPFS pin for the token's applicable JSON file. For our function to work properly, metadata needs to be stored in a Content-Addressed Archive (CAR). Use this [tool](http://car.ipfs.io.ipns.localhost:8080/) to convert metadata into CARs for upload.
 
 **Contract-level metadata in `ParkPics.sol`**:
 ```
 string public name;
 string public symbol;
-uint256 public total_supply;
 ...
 constructor() ERC1155("") {
         name = "Park Pics";
         symbol = "PPS";
-        total_supply = 14;
         ...
 }
 ...
 function contractURI() public pure returns (string memory) {
-        return "<Contract-level URI>"; // Contract-level metadata for ParkPics
+        return "ipfs://bafkreigpykz4r3z37nw7bfqh7wvly4ann7woll3eg5256d2i5huc5wrrdq"; // Contract-level metadata for ParkPics
 }
 ```
 
 Upon importing the contract to OpenSea, contract-level metadata will now pre-populate in the applicable collection fields.
 
-### Hard caps on token and edition supply
+### Hard caps on token supply and editions
 
 **Token hard cap in `ParkPics.sol`**:
 ```
@@ -219,10 +217,14 @@ function uri(...) ... (...) {
 }
 ```
 
-Effectively limits the total token supply by blocking metadata retrieval above the cap. This limit could also be implemented in the mint functions, similar to the editions cap below.
+Our `require` function effectively limits the total token supply by blocking metadata retrieval above the token hard cap (token 14 for ParkPics). Alternatively, we could implement this limit through the mint functions via additional `require` functions, similar to the editions caps below.
 
 **Edition hard cap in `ERC1155.sol`**:
 ```
+// Mapping from token ID to global token editions and global limit
+mapping(uint256 => uint256) private _globalEditions;
+uint256 private _editionLimit;
+...
 constructor(...) {
         ...
         // Set maximum editions per token
@@ -253,7 +255,24 @@ function _mintBatch(...) ... {
 }
 ```
 
-Each time a new NFT is minted, the edition counter is updated. In this sample collection, those editions are capped at 10 each, after which the mint functions throw an error message.
+Each time a new NFT is minted, the edition counter is updated. In this sample collection, those editions are capped at 10 each in the constructor, after which the mint functions throw errors. As mentioned above, a token supply limit could be implemented in a similar manner through these mint functions.
+
+### Other contract notes
+
+* **Minting factory**: We did not include a minting factory in this repo. All tokens are minted by the owner and then transfered or listed for sale by the owner. An additional factory contract would be required to enable minting at a set price or through an auction.
+* **OpenSea additions and hard caps**: If you don't need the OpenSea additions and/or token/edition hard caps, we recommend starting with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard) and then implementing EIP 2918 royalties per the above steps.
+
+### Changes required to use these contracts for a different collection
+
+**In the token contract (`ParkPics.sol`, to be renamed)**:
+1) Change `ParkPics.sol` file name (not strictly required, but recommended).
+2) Change `ParkPics` contract name (also not strictly required, but recommended).
+3) In the constructor, update `name`, `symbol` and `total_supply`. If you're looking to maintain flexibility to expand token count in the future, remove `total_supply` in the constructor and from the `uri` function.
+4) In the `contractURI` function, change the pin to your collection-level metadata. You can remove this function, if not needed, without impacting other functions in the contracts.
+
+**In `ERC1155.sol`**:
+1) In the constructor, update `_uriBase` for your token-level metadata CAR.
+2) In the constructor, update `_editionLimit` for your desired editions cap. Like token hard caps, you can eliminate edition caps by removing the additional `require` hooks in the mint functions (see above).
 
 ## 3. Deploy smart contracts
 
