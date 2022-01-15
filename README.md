@@ -21,7 +21,7 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 
 1) **Upload/pin token metadata through a decentralized service**. We used IPFS and Filecoin in this repo via NFT.storage; Arweave is another popular solution.
 2) **Adjust and/or update the smart contracts for your project's needs**. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as you see fit for your project.
-3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We'll explain steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage, or 
+3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We'll explain steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage through a script, limited to about 150 NFTs per command. We'll also show steps for minting via the block explorer write functions.
 4) **Verify your contract on the applicable block explorer**. We'll show you how to verify contracts using HardHat, one easy option for verification.
 5) **Import your contract to OpenSea**. Once your contract is deployed and verified, you can quickly import to OpenSea via [Get Listed](https://opensea.io/get-listed). You just need the contract address, which you can copy from the block explorer. You'll also need to sign into OpenSea with the contract's owner address before adjusting collection information.
 
