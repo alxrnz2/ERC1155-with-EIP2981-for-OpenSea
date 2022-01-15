@@ -317,31 +317,31 @@ Once you've refined your smart contracts, save them in a subfolder/directory `co
 
 ### Deploy with Remix IDE (easiest)
 
-Remix IDE is a web-based integrated development environment designed for Solidity smart contracts. You can easily connect web wallets to deploy contracts without needing to add private keys to a config file, which even makes deployment from a hardware wallet simple.
+Remix IDE is a web-based integrated development environment designed for Solidity smart contracts. You can easily connect web wallets to deploy contracts without adding private keys to a config file, etc., which also allows for easy deployment from a hardware wallet.
 
-When you open [Remix](https://remix.ethereum.org/), you'll see a sample workspace with some simple, sample smart contracts. While there are a few ways to upload your smart contracts (updated per step two above), we'll use `-connect to localhost-` via `remixd` from the workspace dropdown menu.
-
-Find a detailed tutorial for `remixd` [here](https://remix-ide.readthedocs.io/en/latest/remixd.html), and summarized below.
+When you open [Remix](https://remix.ethereum.org/), you'll see a sample workspace with some simple, sample smart contracts. While there are a few ways to upload your updated smart contracts, we'll use `-connect to localhost-` via `remixd` from the workspace dropdown menu. Find a detailed tutorial for `remixd` [here](https://remix-ide.readthedocs.io/en/latest/remixd.html), and summarized below.
 
 <img width="956" alt="image" src="https://user-images.githubusercontent.com/36116381/149635085-9c92e8ec-dca8-40f8-89c9-7bd0fd7f0e80.png">
 
-First, you'll need `npm` and `node`. Follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) if not already installed.
+**Install Remixed to connect Remix to your local computer**
 
-On your desktop, open the folder you created with a subfolder `contracts` in an IDE like [VS Code](https://code.visualstudio.com/). (You'll need to do this to verify the contracts via Hardhat later anyway.)
+First, you'll need `npm` and `node`. Follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) if not already installed. On your desktop, open the folder you created with a subfolder `contracts` in an IDE like [VS Code](https://code.visualstudio.com/). (You'll need this to verify the contracts via Hardhat later anyway.)
 
-Install `remixd`, which enables Remix IDE to connect to the localhost, on your local machine via a VS Code terminal or through another command line interface (CLI).
+Once you've installed `npm` and `node`, install `remixd`, which enables Remix IDE to connect to the localhost, via a VS Code terminal or through another command line interface (CLI) like [Git Bash](https://git-scm.com/downloads).
 
 ```
 npm install -g @remix-project/remixd
 ```
 
-Then, enter the following command, substituting `<absolute-path>` with the `contracts` folder path.
+Then, enter the following command to connect to Remix, substituting `<absolute-path>` with the `contracts` folder path.
 
 ```
 remixd -s <absolute-path> --remix-ide https://remix.ethereum.org
 ```
 
-Now, returning to Remix in your web brower, select `-connect to localhost-`. The files in the `contracts` folder should populate in Remix. Find detailed steps to compile and deploy smart contracts through Remix [here](https://remix-ide.readthedocs.io/en/latest/create_deploy.html#), and summarized below.
+**Deploy smart contracts in Remix**
+
+Returning to Remix in your web brower, select `-connect to localhost-` and `Continue`. You should be able to see files in your `contracts` folder in Remix. Find detailed steps to compile and deploy smart contracts through Remix [here](https://remix-ide.readthedocs.io/en/latest/create_deploy.html#), and summarized below.
 
 First, select the token contract (`ParkPics.sol`, or whatever you renamed the contract) in the `File Explorer` tab. Then, in the `Solidity Compiler` tab, select the correct compiler version (0.8.2 for these contracts) and click `Compile...`. Finally, in the `Deploy & Run Transactions` tab, select your environment and owner wallet (see context below), and deploy the token contract.
 
@@ -353,13 +353,57 @@ Once you've configured environment and your wallet, click `Deploy` in Remix. You
 
 Steps below for easy verification through HardHat, which will enable read/write interactions in the explorer itself.
 
-### Deploy with HardHat (recommended)
+### Deploy with Hardhat (recommended)
 
-*Coming soon*
+Find detailed Hardhat instructions [here](https://hardhat.org/getting-started/) with key steps summarized below.
 
-## 4. Verify smart contracts with HardHat
+First, install Hardhat and some key packages (waffle and ethers).
 
-*Coming soon*
+```
+npm install --save-dev hardhat
+npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai
+npm install --save-dev @nomiclabs/hardhat-ethers ethers
+```
+
+Set your directory via `cd` to the folder containing `contracts`. You should see a config file called `hardhat.config.js`. Before compiling your contracts, update the compiler version to `solidity: "0.8.2"` for these contracts. (You can find a sample config file in this repo with some key fields added.)
+
+Using Hardhat, compile your smart contracts. This will create artifacts, ABI, and bytecode for deployment and verification.
+
+```
+npx hardhat compile
+```
+
+Before deployment, you'll need to update the config file with an API key and private key (server and wallet, respectively) for each blockchain you plan to use. We have placeholders for Mumbai, Polygon, Rinkeby, and Ethereum.
+* For servers, [Infura](https://infura.io/) and [Alchemy](https://www.alchemy.com/) are two popular choices that let you get started for free. We set the sample config file to Infura, ready for you to add your API key.
+* For wallet, you just need to export your private key (see steps [here](https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-Export-an-Account-Private-Key) for MetaMask) and paste it into the config's `accounts` field for each applicable blockchain.
+
+Next, you'll need a `.js` script to deploy your contract. We included a simple sample script for `ParkPics.sol` in this repo that you can modify accordingly. Save your script in the main directory and run the following command. Replace `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file. You'll also want to add `require("@nomiclabs/hardhat-waffle");` and `require("@nomiclabs/hardhat-ethers");` to your config.
+
+```
+npx hardhat run ./scripts/deployMint.js --network <NETWORK>
+
+Example for Mumbai testnet:
+npx hardhat run ./scripts/deployMint.js --network mumbai
+```
+
+That's it. You've deployed your contract using Hardhat. You should see a contract address that you can check in a block explorer to monitor contract transactions.
+
+## 4. Verify smart contracts with Hardhat
+
+Once you deploy your smart contracts, you should verify them with the applicable block explorer to enable read/write interactions from the explorer.
+
+If you deployed in Remix, you'll just need to follow the above Hardhat steps through compile to use Hardhat for verification. (No need to deploy via Hardhat, but you'll need the artifacts, ABI, and bytecode.)
+
+Before running the following verification command, you'll need to update your config file with an ABI key for Etherscan or Polygonscan, and add `require("@nomiclabs/hardhat-etherscan");`. (See the sample config file for context.)
+
+Install the etherscan package and then run the following verify command, replacing `<NETWORK>` with the applicable blockchain and `<CONTRACT>` with the deployed smart contract's address.
+
+```
+npm install --save-dev @nomiclabs/hardhat-etherscan
+npx hardhat verify --network <NETWORK> <CONTRACT>
+```
+
+If you get a success message, you should then be able to see your contracts and read/write functions on the applicable block explorer.
 
 ## 5. Import collection to OpenSea
 
