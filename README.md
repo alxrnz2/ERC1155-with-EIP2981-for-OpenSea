@@ -20,56 +20,58 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 ### High-level instructions
 
 1) **Upload/pin token metadata through a decentralized service**. We used IPFS and Filecoin in this repo via NFT.storage; Arweave is another popular solution.
-2) **Adjust and/or update the smart contracts for your project's needs**. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as you see fit for your project.
-3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We'll explain steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage through a script, limited to about 150 NFTs per command. We'll also show steps for minting via the block explorer write functions.
-4) **Verify your contract on the applicable block explorer**. We'll show you how to verify contracts using HardHat, one easy option for verification.
-5) **Import your contract to OpenSea**. Once your contract is deployed and verified, you can quickly import to OpenSea via [Get Listed](https://opensea.io/get-listed). You just need the contract address, which you can copy from the block explorer. You'll also need to sign into OpenSea with the contract's owner address before adjusting collection information.
+2) **Adjust and/or update the smart contracts for your project's needs**. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as desired for your project.
+3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We include steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage through a script, limited to about 150 NFTs per command. We'll also show steps for minting via the block explorer write functions.
+4) **Verify your contract on the applicable block explorer**. We'll show you how to verify contracts using HardHat, one easy option.
+5) **Import your contract to OpenSea**. Once your contract is deployed and verified, you can quickly import to OpenSea via [Get Listed](https://opensea.io/get-listed). You just need the contract address, which you can copy from the block explorer. You'll also need to be signed into OpenSea with the contract's owner address before adjusting collection information.
 
 ## 1. Pin/upload token metadata
 
 ### NFT metadata overview
 
-If you're in this repo, we assume you understand the basics of NFTs and decentralized metadata/image storage. If you're new to the space or looking for a refresh, we recommend these tutorials from ProtoSchool: [Content Addressing](https://proto.school/content-addressing) and [Anatomy of a CID](https://proto.school/anatomy-of-a-cid).
+If you're in this repo, we assume you understand the basics of NFTs and metadata/image pinning/storage. If you're new to content addressing, we recommend these tutorials from ProtoSchool: [Content Addressing](https://proto.school/content-addressing) and [Anatomy of a CID](https://proto.school/anatomy-of-a-cid).
 
-At a high-level, an NFT is simply a ledger entry indicating ownership of a specific token ID within a smart contract (or program that runs on blockchain). That smart contract then points to metadata (generally JSON format) and/or an image for each token ID via a link or pin. That link could be as simple as a website URL where the data is stored, but then the NFT would be vulnerable to changes made by the domain owner. Occasionally, NFT collections include metadata on-chain, but generally storing metadata on the blockchains themselves is prohibitively expensive.
+At a high-level, an NFT is simply a ledger entry within a smart contract (or program that runs on blockchain) that allocates ownership of a specific token ID. That smart contract then points to metadata via a `uri` function ([Uniform Resource Indicator](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier)), generally in JSON format, and/or an image for each token ID via a link/pin.
 
-To ensure the NFT doesn't change over time (unless change is a desired feature), projects generally use content addressing and decentralized file storage. One common combination is [IPFS and Filecoin](https://docs.filecoin.io/about-filecoin/ipfs-and-filecoin/); another is [Arweave](https://www.arweave.org/).
+That link could be as simple as a website URL where the data is stored, but then the NFT would be vulnerable to changes made by the domain owner. To ensure the NFT doesn't change over time (unless change is a desired feature), projects generally use content addressing and decentralized file storage. One common combination is [IPFS and Filecoin](https://docs.filecoin.io/about-filecoin/ipfs-and-filecoin/); another is [Arweave](https://www.arweave.org/).
 
-### Some metadata details
+Occasionally, NFT collections include metadata on-chain, but generally storing metadata on blockchains is prohibitively expensive, versus a solution like IPFS/Filecoin.
 
-[TBU]
+If you're new to NFT metadata standards, we recommend these guides from [OpenSea](https://docs.opensea.io/docs/metadata-standards) and [NFT School](http://nftschool.dev.ipns.localhost:8080/reference/metadata-schemas/).
 
-Learn more from OpenSea about token metadata standards [here](https://docs.opensea.io/docs/metadata-standards).
+And if you're interested in a python script to convert a CSV file to token JSONs, stay tuned for a follow-up repo.
 
-### Recommended tools
+### Recommended tools for pin/upload
 
 For this repo, we used IPFS and Filecoin via two easy tools:
 1) **[IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/)**: Convert token-level images (likely PNGs) and metadata (JSONs) into CARs. You'll need to upload the images first, so you can use the images' CAR in the token JSONs.
 2) **[NFT.Storage for upload](https://nft.storage/)**: Upload CARs to IPFS and Filecoin servers for decentralized pinning and storage, respectively.
 
-This [IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/) returns a Content-Addressed Archive (CAR file) with a unique Content Identifier (CID) based on the files uploaded. You can use this tool for your token-level metadata (individual JSONs for each token) and token images. For instance, the two ParkPics CARs include (1) JSONs numbered `1.json` to `14.json` with each token's metadata (park, feature, type, image URI, etc.), and (2) PNGs numbered `1.png` to `14.png` with the park pictures themselves.
+This [IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/) returns a Content-Addressed Archive (CAR file) with a unique Content Identifier (CID) based on the files uploaded. You can use this tool for your token-level metadata (individual JSONs for each token) and images. For instance, the two ParkPics CARs consist of (1) JSONs numbered `1.json` to `14.json` containing each token's metadata (park, feature, type, image URI, etc.), and (2) PNGs numbered `1.png` to `14.png` with the park pictures themselves.
 
-For this smart contract's `uri` function to work, token metadata needs to be stored in a CAR with directory file names that match each token's ID. For instance, token two's metadata should be stored as `2.json` within the CAR.
+For this smart contract's `uri` function to work, token metadata needs to be stored in a CAR with directory file names that match each token's ID. For instance, token two's metadata should be stored as `2.json` within the CAR. After uploading the token-level metadata and images (separately), you'll be able to download each CAR file.
 
-After uploading the token-level metadata, you'll be able to download the CAR for that data. Reminder: Start with the images, pins for which need to be added to the JSON files before you can generate the metadata CAR.
+Reminder: Start with the images, because image pins need to be added to the JSON files before you can generate the metadata CAR.
 
 <img width="740" alt="image" src="https://user-images.githubusercontent.com/36116381/149631861-9a75babf-c590-4b1e-a8a8-16c124cbce71.png">
 
-Next, you can use [NFT.Storage](https://nft.storage/), a free service provided by Protocol Labs, to upload your image and metadata CARs to Filecoin and IPFS servers.
+Once you have the image and metadata CARs, you can use [NFT.Storage](https://nft.storage/), a free service provided by Protocol Labs, to upload those CARs to Filecoin and IPFS servers (see below).
 
 <img width="865" alt="image" src="https://user-images.githubusercontent.com/36116381/149632270-4cd49ffc-1955-4d94-9de9-53ebfc6de2bc.png">
 
-After upload, you'll be able to view your metadata via the IPFS pins. There may be a slight delay, so give the network at least a few minutes to process your uploads before trying to retrieve.
+After uploading via NFT.Storage, you'll be able to view your metadata via the IPFS pins. There may be a slight delay, so give the network at least a few minutes to process your CAR uploads before trying to retrieve files.
 
 Using [Brave](https://brave.com/), a browser that natively integrates IPFS, you can access IPFS via `ipfs://<CAR pin>/<file>`. For instance, ParkPics token one metadata is available via `ipfs://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby/1.json` in Brave. Using a web browser without IPFS integrated, you can access the same metadata via `https://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby.ipfs.dweb.link/1.json`.
 
 <img width="952" alt="image" src="https://user-images.githubusercontent.com/36116381/149633191-acb52033-5d92-4a0e-9371-18f82fc74969.png">
 
-Then, using the same retrieval approach in Brave, you can access the token's image via `ipfs://bafybeiatmiig6ylhha5p7o7bxvqutfitv6k2n5ghche4r22tgkmoz6gu5u/1.png`, as provided in the JSON's `image` field.
+Then, using the same retrieval approach in Brave, you can access the token's image via `ipfs://bafybeiatmiig6ylhha5p7o7bxvqutfitv6k2n5ghche4r22tgkmoz6gu5u/1.png`, as provided in the JSON's `image` field (see above).
 
 <img width="959" alt="image" src="https://user-images.githubusercontent.com/36116381/149633212-f3dde4f9-e377-429b-90e3-edb7eb1840c2.png">
 
-To display NFT images and metadata, services like OpenSea retrieve that data following these same steps, albeit less manually.
+To display images and metadata for NFTs, services like OpenSea retrieve and cache that data following these same steps, albeit less manually.
+
+Note: There are many other ways to pin/upload metadata and images to IPFS and Arweave. And to the extent you don't want to use CARs, you'll need to adjust the smart contracts' `uri` function and `PermanentURI` events accordingly.
 
 ## 2. Create smart contracts
 
@@ -309,15 +311,53 @@ Each time a new NFT is minted, the edition counter is updated. In this sample co
 
 ## 3. Deploy smart contracts
 
-### Deploy with Remix
+Once you've refined your smart contracts, save them in a subfolder/directory `contracts` within the folder/directory you're using for deployment. Hardhat and Remix will look for a `contracts` subdirectory when running deploy scripts. To the extent you reorganize the `contracts` subdirectories in this repo, be sure to update the `import` calls in each contract that use relative links.
+
+<img width="263" alt="image" src="https://user-images.githubusercontent.com/36116381/149635193-c892afb3-162d-4e68-a667-abdd8006513d.png">
+
+### Deploy with Remix IDE (easiest)
+
+Remix IDE is a web-based integrated development environment designed for Solidity smart contracts. You can easily connect web wallets to deploy contracts without needing to add private keys to a config file, which even makes deployment from a hardware wallet simple.
+
+When you open [Remix](https://remix.ethereum.org/), you'll see a sample workspace with some simple, sample smart contracts. While there are a few ways to upload your smart contracts (updated per step two above), we'll use `-connect to localhost-` via `remixd` from the workspace dropdown menu.
+
+Find a detailed tutorial for `remixd` [here](https://remix-ide.readthedocs.io/en/latest/remixd.html), and summarized below.
+
+<img width="956" alt="image" src="https://user-images.githubusercontent.com/36116381/149635085-9c92e8ec-dca8-40f8-89c9-7bd0fd7f0e80.png">
+
+First, you'll need `npm` and `node`. Follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) if not already installed.
+
+On your desktop, open the folder you created with a subfolder `contracts` in an IDE like [VS Code](https://code.visualstudio.com/). (You'll need to do this to verify the contracts via Hardhat later anyway.)
+
+Install `remixd`, which enables Remix IDE to connect to the localhost, on your local machine via a VS Code terminal or through another command line interface (CLI).
+
+```
+npm install -g @remix-project/remixd
+```
+
+Then, enter the following command, substituting `<absolute-path>` with the `contracts` folder path.
+
+```
+remixd -s <absolute-path> --remix-ide https://remix.ethereum.org
+```
+
+Now, returning to Remix in your web brower, select `-connect to localhost-`. The files in the `contracts` folder should populate in Remix. Find detailed steps to compile and deploy smart contracts through Remix [here](https://remix-ide.readthedocs.io/en/latest/create_deploy.html#), and summarized below.
+
+First, select the token contract (`ParkPics.sol`, or whatever you renamed the contract) in the `File Explorer` tab. Then, in the `Solidity Compiler` tab, select the correct compiler version (0.8.2 for these contracts) and click `Compile...`. Finally, in the `Deploy & Run Transactions` tab, select your environment and owner wallet (see context below), and deploy the token contract.
+
+To test integration with OpenSea, we recommend using `Injected Web3` for the environment and connecting your web wallet like MetaMask. You can connect to Remix much like other web3 services by signing with your wallet. In your web wallet, select the network for deployment; we recommend trying a testnet first like Rinkeby for Ethereum or Mumbai for Polygon. You'll also need some Ether or Matic in your wallet to cover gas fees for deployment.
+
+Note: If you don't already have Polygon integrated with your web wallet, follow these [steps](https://docs.polygon.technology/docs/develop/metamask/config-polygon-on-metamask/) from the Polygon team. For testnet transactions, use these faucets for test Ether and Matic, respectively: [Rinkeby](https://faucets.chain.link/rinkeby) and [Mumbai](https://faucet.polygon.technology/).
+
+Once you've configured environment and your wallet, click `Deploy` in Remix. You should see a contract address that will enable you to track contract transactions in a block explorer: [Etherscan](https://etherscan.io/) or [Polygonscan](https://polygonscan.com/).
+
+Steps below for easy verification through HardHat, which will enable read/write interactions in the explorer itself.
+
+### Deploy with HardHat (recommended)
 
 *Coming soon*
 
-### Deploy with HardHat
-
-*Coming soon*
-
-## 4. Verify smart contracts
+## 4. Verify smart contracts with HardHat
 
 *Coming soon*
 
