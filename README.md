@@ -1,4 +1,4 @@
-# ERC1155 with EIP2981 royalties and OpenSea-specific additions
+# ERC 1155 with EIP 2981 royalties and OpenSea-specific additions
 
 ### Overview
 
@@ -27,13 +27,55 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 
 ## 1. Pin/upload token metadata
 
-*Coming soon.*
+### NFT metadata overview
+
+If you're in this repo, we assume you understand the basics of NFTs and decentralized metadata/image storage. If you're new to the space or looking for a refresh, we recommend these tutorials from ProtoSchool: [Content Addressing](https://proto.school/content-addressing) and [Anatomy of a CID](https://proto.school/anatomy-of-a-cid).
+
+At a high-level, an NFT is simply a ledger entry indicating ownership of a specific token ID within a smart contract (or program that runs on blockchain). That smart contract then points to metadata (generally JSON format) and/or an image for each token ID via a link or pin. That link could be as simple as a website URL where the data is stored, but then the NFT would be vulnerable to changes made by the domain owner. Occasionally, NFT collections include metadata on-chain, but generally storing metadata on the blockchains themselves is prohibitively expensive.
+
+To ensure the NFT doesn't change over time (unless change is a desired feature), projects generally use content addressing and decentralized file storage. One common combination is [IPFS and Filecoin](https://docs.filecoin.io/about-filecoin/ipfs-and-filecoin/); another is [Arweave](https://www.arweave.org/).
+
+### Some metadata details
+
+[TBU]
+
+Learn more from OpenSea about token metadata standards [here](https://docs.opensea.io/docs/metadata-standards).
+
+### Recommended tools
+
+For this repo, we used IPFS and Filecoin via two easy tools:
+1) **[IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/)**: Convert token-level images (likely PNGs) and metadata (JSONs) into CARs. You'll need to upload the images first, so you can use the images' CAR in the token JSONs.
+2) **[NFT.Storage for upload](https://nft.storage/)**: Upload CARs to IPFS and Filecoin servers for decentralized pinning and storage, respectively.
+
+This [IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/) returns a Content-Addressed Archive (CAR file) with a unique Content Identifier (CID) based on the files uploaded. You can use this tool for your token-level metadata (individual JSONs for each token) and token images. For instance, the two ParkPics CARs include (1) JSONs numbered `1.json` to `14.json` with each token's metadata (park, feature, type, image URI, etc.), and (2) PNGs numbered `1.png` to `14.png` with the park pictures themselves.
+
+For this smart contract's `uri` function to work, token metadata needs to be stored in a CAR with directory file names that match each token's ID. For instance, token two's metadata should be stored as `2.json` within the CAR.
+
+After uploading the token-level metadata, you'll be able to download the CAR for that data. Reminder: Start with the images, pins for which need to be added to the JSON files before you can generate the metadata CAR.
+
+<img width="740" alt="image" src="https://user-images.githubusercontent.com/36116381/149631861-9a75babf-c590-4b1e-a8a8-16c124cbce71.png">
+
+Next, you can use [NFT.Storage](https://nft.storage/), a free service provided by Protocol Labs, to upload your image and metadata CARs to Filecoin and IPFS servers.
+
+<img width="865" alt="image" src="https://user-images.githubusercontent.com/36116381/149632270-4cd49ffc-1955-4d94-9de9-53ebfc6de2bc.png">
+
+After upload, you'll be able to view your metadata via the IPFS pins. There may be a slight delay, so give the network at least a few minutes to process your uploads before trying to retrieve.
+
+Using [Brave](https://brave.com/), a browser that natively integrates IPFS, you can access IPFS via `ipfs://<CAR pin>/<file>`. For instance, ParkPics token one metadata is available via `ipfs://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby/1.json` in Brave. Using a web browser without IPFS integrated, you can access the same metadata via `https://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby.ipfs.dweb.link/1.json`.
+
+<img width="952" alt="image" src="https://user-images.githubusercontent.com/36116381/149633191-acb52033-5d92-4a0e-9371-18f82fc74969.png">
+
+Then, using the same retrieval approach in Brave, you can access the token's image via `ipfs://bafybeiatmiig6ylhha5p7o7bxvqutfitv6k2n5ghche4r22tgkmoz6gu5u/1.png`, as provided in the JSON's `image` field.
+
+<img width="959" alt="image" src="https://user-images.githubusercontent.com/36116381/149633212-f3dde4f9-e377-429b-90e3-edb7eb1840c2.png">
+
+To display NFT images and metadata, services like OpenSea retrieve that data following these same steps, albeit less manually.
 
 ## 2. Create smart contracts
 
 ### OpenZeppelin Wizard
 
-We started with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard) to create the base ERC1155 contracts.
+We started with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard) to create the base ERC 1155 contracts.
 * **Functions**: Mintable and Pausable (allows for owner minting and contract pausing, in the extent something goes wrong)
 * **Access Control**: Ownable (one account can mint, pause, etc., versus segregated permissions for multiple accounts)
 
@@ -159,7 +201,9 @@ function _mintBatch(...) ... {
 }
 ```
 
-OpenSea looks for a `PermanentURI` event to determine if a token's metadata is frozen. The event simply emits the URI for each token as they're minted. Learn more [here](https://docs.opensea.io/docs/metadata-standards).
+OpenSea looks for a `PermanentURI` event to determine if a token's metadata is frozen. The event simply emits the URI for each token as they're minted. Since we also need to return the URI in the token contract, `ParkPics.sol`, we define `_uriBase` as an internal variable that can be called in the token contract `uri` function.
+
+Learn more [here](https://docs.opensea.io/docs/metadata-standards).
 
 **Token metadata return override in `ParkPics.sol`**:
 ```
