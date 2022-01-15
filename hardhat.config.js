@@ -13,7 +13,8 @@ module.exports = {
     hardhat: {
     },
     mumbai: {
-      url: "https://rpc-mumbai.maticvigil.com"
+      url: "https://rpc-mumbai.maticvigil.com",
+      accounts: ["<ADD WALLET PRIVATE KEY>"]
     },
     polygon: {
       url: "https://polygon-mainnet.infura.io/v3/<ADD API KEY>",
