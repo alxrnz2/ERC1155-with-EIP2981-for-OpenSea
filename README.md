@@ -56,11 +56,9 @@ The best practice with any standard implementation is to start with an interface
 
 **`royaltyInfo` function in `ParkPics.sol`**:
 ```
-function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view override
-        returns (address receiver, uint256 royaltyAmount)
-    {
+function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view override returns (address receiver, uint256 royaltyAmount) {
         return (_recipient, (_salePrice * 1000) / 10000);
-    }
+}
 ```
 
 When called, this function returns royalty recipient and amount, indifferent as to sale currency. We set royalties at 10% or 1,000 basis points; to set a different percentage, just adjust the `1000` to your desired royalty in basis points.
@@ -71,17 +69,8 @@ Reputable exchanges tend to follow community standards, which we expect EIP 2981
 
 **supportsInterface override in `ParkPics.sol`**:
 ```
-function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, IERC165)
-        returns (bool)
-    {
-        return (
-            interfaceId == type(IERC2981).interfaceId ||
-            super.supportsInterface(interfaceId)
-        );
+function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
+        return (interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId));
 }
 ```
 
