@@ -401,7 +401,7 @@ First, install Hardhat and a few key packages (waffle and ethers).
 
 ```
 npm install --save-dev hardhat
-npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai @nomiclabs/hardhat-ethers ethers
+npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai @nomiclabs/hardhat-ethers ethers @nomiclabs/hardhat-etherscan
 ```
 
 #### Compile your contracts
@@ -420,12 +420,14 @@ Before deployment, you'll need to update the config file with an API key and pri
 * **Servers**: [Infura](https://infura.io/) and [Alchemy](https://www.alchemy.com/) are two popular options that allow you to get started for free. We set the sample config file to Infura: just add your API key.
 * **Wallet**: You'll need to paste your private key (see steps [here](https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-Export-an-Account-Private-Key) to export from MetaMask) into the config file's `accounts` field for each applicable blockchain.
 
-Next, you'll need a `.js` script to deploy your contract. We included a simple sample script for `ParkPics.sol` in this repo that you can modify accordingly. Save your script in the main directory and run the command below. Replace `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file.
+Next, you'll need a `.js` script to deploy your contract. We included a simple sample [script](scripts/deploy.js) for `ParkPics.sol` in this repo that you can modify accordingly.
+
+In the command below, replace `<SCRIPT-PATH>` with your script path/filename and `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file, and run the command.
 
 You'll also want to add `require("@nomiclabs/hardhat-waffle");`, which implicitly adds `require("@nomiclabs/hardhat-ethers");`, to your config file. Learn more about the Waffle library from the [Hardhat](https://hardhat.org/guides/waffle-testing.html) and [Waffle](https://ethereum-waffle.readthedocs.io/en/latest/index.html) teams.
 
 ```
-npx hardhat run ./scripts/deploy.js --network <NETWORK>
+npx hardhat run <SCRIPT-PATH> --network <NETWORK>
 
 Example for Mumbai testnet using our sample config file:
 npx hardhat run ./scripts/deploy.js --network mumbai
