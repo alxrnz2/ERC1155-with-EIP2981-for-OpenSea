@@ -49,7 +49,7 @@ If you're in this repo, we assume you understand the basics of NFTs and metadata
 
 If new to NFT metadata standards, we recommend these guides from [OpenSea](https://docs.opensea.io/docs/metadata-standards) and [NFT School](http://nftschool.dev.ipns.localhost:8080/reference/metadata-schemas/); if new to content addressing, we recommend these tutorials from ProtoSchool: [Content Addressing](https://proto.school/content-addressing) and [Anatomy of a CID](https://proto.school/anatomy-of-a-cid).
 
-Also, check out this repo [coming soon] for a simple python script that creates token JSONs from a CSV file containing metadata traits.
+Also, check out our [CSV-to-JSON repo](https://github.com/alxrnz2/CSV-to-JSON-via-Python-script) for a simple python script that creates token JSONs from a CSV file containing metadata traits.
 
 ### Recommended tools for pin/upload
 
