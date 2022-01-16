@@ -431,7 +431,7 @@ Example for Mumbai testnet using our sample config file:
 npx hardhat run ./scripts/deploy.js --network mumbai
 ```
 
-That's it; you've deployed your contracts via Hardhat. You should see a contract address you can use in a block explorer.
+That's it; you've deployed your contracts via Hardhat. Using our deploy script, you should see a contract address you can use in a block explorer.
 
 ## 4. Verify smart contracts with Hardhat
 
