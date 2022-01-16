@@ -1,4 +1,4 @@
-# ERC 1155 with EIP 2981 royalties and OpenSea-specific additions
+# ERC 1155 with EIP 2981 royalties, OpenSea-specific additions, and token/edition hard caps
 
 ### Overview
 
