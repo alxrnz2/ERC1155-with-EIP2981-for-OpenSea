@@ -19,11 +19,11 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 
 ### High-level instructions
 
-1) **Upload/pin token metadata through a decentralized service**. We used IPFS and Filecoin in this repo via NFT.storage; Arweave is another popular solution.
-2) **Adjust and/or update the smart contracts for your project's needs**. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as desired for your project.
-3) **Deploy your contract to a testnet, then mainnet for any EVM blockchain**. We include steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage through a script, limited to about 150 NFTs per command. We'll also show steps for minting via the block explorer write functions.
-4) **Verify your contract on the applicable block explorer**. We'll show you how to verify contracts using HardHat, one easy option.
-5) **Import your contract to OpenSea**. Once your contract is deployed and verified, you can quickly import to OpenSea via [Get Listed](https://opensea.io/get-listed). You just need the contract address, which you can copy from the block explorer. You'll also need to be signed into OpenSea with the contract's owner address before adjusting collection information.
+1) [**Upload/pin token metadata through a decentralized service**](## 1. Pin/upload token metadata). We used IPFS and Filecoin in this repo via NFT.storage; Arweave is another popular solution.
+2) [**Adjust and/or update the smart contracts for your project's needs**]. If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as desired for your project.
+3) [**Deploy your contract to a testnet, then mainnet for any EVM blockchain**]. We include steps for Remix (easiest) and Hardhat (most robust), but you can also use Truffle (java-based) or Brownie (python-based) for deployment. You can also mint at this stage through a script, limited to about 150 NFTs per command. We'll also show steps for minting via the block explorer write functions.
+4) [**Verify your contract on the applicable block explorer**]. We'll show you how to verify contracts using HardHat, one easy option.
+5) [**Import your contract to OpenSea**]. Once your contract is deployed and verified, you can quickly import to OpenSea via [Get Listed](https://opensea.io/get-listed). You just need the contract address, which you can copy from the block explorer. You'll also need to be signed into OpenSea with the contract's owner address before adjusting collection information.
 
 ## 1. Pin/upload token metadata
 
@@ -89,7 +89,7 @@ If you'd like to change these presets, it's probably easiest to start with the [
 
 EIP 2981 includes two key functions: `royaltyInfo` and `supportsInterface`. In addition to those functions, we implemented the ability to change the royalty recipient. To remove that flexibility, replace `_recipient` with the desired recipient public address.
 
-All EIP 2981 required functions were implemented in the token contract, `ParkPics.sol` in this example.
+All EIP 2981 required functions were implemented in the token contract, [`ParkPics.sol`](contracts/ParkPics.sol) in this example.
 
 **Import the EIP 2981 interface in `ParkPics.sol`**:
 ```
@@ -144,6 +144,8 @@ These additions create a private varible for royalty recipient address, define t
 ### OpenSea-specific changes
 
 These OpenSea additions enable whitelisting, meta-transactions, a permanent metadata event, token metadata override, and contract-level metadata. Some of these additions may be redundant given recent OpenSea infrastructure changes, but to cover all bases, we pieced together and implemented each per OpenSea's developer docs.
+
+These changes were implemented in [`ParkPics.sol`](contracts/ParkPics.sol) and [`ERC1155.sol`](contracts/@openzeppelin/contracts/token/ERC1155/ERC1155.sol).
 
 **Whitelisting in `ERC1155.sol`**:
 ```
@@ -237,6 +239,8 @@ Upon importing the contract to OpenSea, contract-level metadata will now pre-pop
 
 ### Hard caps on token supply and editions
 
+Hard caps were implemented in [`ParkPics.sol`](contracts/ParkPics.sol) and [`ERC1155.sol`](contracts/@openzeppelin/contracts/token/ERC1155/ERC1155.sol).
+
 **Token hard cap in `ParkPics.sol`**:
 ```
 constructor() ERC1155("") {
@@ -311,29 +315,33 @@ Each time a new NFT is minted, the edition counter is updated. In this sample co
 
 ## 3. Deploy smart contracts
 
-Once you've refined your smart contracts, save them in a subfolder/directory `contracts` within the folder/directory you're using for deployment. Hardhat and Remix will look for a `contracts` subdirectory when running deploy scripts. To the extent you reorganize the `contracts` subdirectories in this repo, be sure to update the `import` calls in each contract that use relative links.
+Once you've refined your smart contracts, save them in a subfolder/directory `contracts` within the folder/directory you're using for deployment. It's best practice, and Hardhat will specifically look for a `contracts` subdirectory when compiling contracts.
+
+To the extent you reorganize the `contracts` subdirectories from this repo, be sure to also update the `import` calls in each contract accordingly.
 
 <img width="263" alt="image" src="https://user-images.githubusercontent.com/36116381/149635193-c892afb3-162d-4e68-a667-abdd8006513d.png">
 
+To execute the commands below on a windows machine, we generally use a [Git Bash](https://git-scm.com/downloads) [terminal](https://code.visualstudio.com/docs/editor/integrated-terminal) in [VS Code](https://code.visualstudio.com/), but there are plenty of other options.
+
 ### Deploy with Remix IDE (easiest)
 
-Remix IDE is a web-based integrated development environment designed for Solidity smart contracts. You can easily connect web wallets to deploy contracts without adding private keys to a config file, etc., which also allows for easy deployment from a hardware wallet.
+Remix IDE is a web-based development environment designed for Solidity smart contracts. You can easily connect web wallets to Remix and deploy contracts without adding private keys to a config file, etc., which also allows for easy deployment from a hardware wallet that's connected through your web wallet (like [Ledger via MetaMask](https://www.ledger.com/academy/security/the-safest-way-to-use-metamask). For security purposes, we recommend this approach.
 
 When you open [Remix](https://remix.ethereum.org/), you'll see a sample workspace with some simple, sample smart contracts. While there are a few ways to upload your updated smart contracts, we'll use `-connect to localhost-` via `remixd` from the workspace dropdown menu. Find a detailed tutorial for `remixd` [here](https://remix-ide.readthedocs.io/en/latest/remixd.html), and summarized below.
 
 <img width="956" alt="image" src="https://user-images.githubusercontent.com/36116381/149635085-9c92e8ec-dca8-40f8-89c9-7bd0fd7f0e80.png">
 
-**Install Remixed to connect Remix to your local computer**
+**Install Remixd to connect Remix to your local computer**
 
-First, you'll need `npm` and `node`. Follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) if not already installed. On your desktop, open the folder you created with a subfolder `contracts` in an IDE like [VS Code](https://code.visualstudio.com/). (You'll need this to verify the contracts via Hardhat later anyway.)
+First, you'll need `npm` and `node`. Follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) if not already installed. On your desktop, we recommend opening the folder containing subfolder `contracts` in an IDE like VS Code. (Not strictly required, but it'll make it easier to verify your contracts via Hardhat later.)
 
-Once you've installed `npm` and `node`, install `remixd`, which enables Remix IDE to connect to the localhost, via a VS Code terminal or through another command line interface (CLI) like [Git Bash](https://git-scm.com/downloads).
+Once you've installed `npm` and `node`, install `remixd` via a VS Code terminal like [Git Bash](https://git-scm.com/downloads) or through another command line interface (CLI).
 
 ```
 npm install -g @remix-project/remixd
 ```
 
-Then, enter the following command to connect to Remix, substituting `<absolute-path>` with the `contracts` folder path.
+Then, enter the following command to connect to Remix, substituting `<absolute-path>` with the `contracts` folder path. If using Git Bash, refer to this [article](https://opensource.com/article/19/8/understanding-file-paths-linux) to troubleshoot path issues.
 
 ```
 remixd -s <absolute-path> --remix-ide https://remix.ethereum.org
@@ -341,23 +349,23 @@ remixd -s <absolute-path> --remix-ide https://remix.ethereum.org
 
 **Deploy smart contracts in Remix**
 
-Returning to Remix in your web brower, select `-connect to localhost-` and `Continue`. You should be able to see files in your `contracts` folder in Remix. Find detailed steps to compile and deploy smart contracts through Remix [here](https://remix-ide.readthedocs.io/en/latest/create_deploy.html#), and summarized below.
+Returning to Remix in your web brower, select `-connect to localhost-` and `Continue`. You should now be able to see files in your `contracts` folder in Remix. Find detailed steps to compile and deploy smart contracts through Remix [here](https://remix-ide.readthedocs.io/en/latest/create_deploy.html#), and summarized below.
 
-First, select the token contract (`ParkPics.sol`, or whatever you renamed the contract) in the `File Explorer` tab. Then, in the `Solidity Compiler` tab, select the correct compiler version (0.8.2 for these contracts) and click `Compile...`. Finally, in the `Deploy & Run Transactions` tab, select your environment and owner wallet (see context below), and deploy the token contract.
+First, select the token contract (`ParkPics.sol` in our sample contracts) in the `File Explorer` tab. Then, in the `Solidity Compiler` tab, select a compiler version at least as recent as that specified in the contracts (0.8.2 per `pragma solidity ^0.8.2;` at the top of `ParkPics.sol`) and click `Compile...`. Finally, in the `Deploy & Run Transactions` tab, select your environment and owner wallet (see below), and deploy the token contract.
 
-To test integration with OpenSea, we recommend using `Injected Web3` for the environment and connecting your web wallet like MetaMask. You can connect to Remix much like other web3 services by signing with your wallet. In your web wallet, select the network for deployment; we recommend trying a testnet first like Rinkeby for Ethereum or Mumbai for Polygon. You'll also need some Ether or Matic in your wallet to cover gas fees for deployment.
+To test integration with OpenSea, we recommend using `Injected Web3` for the environment and connecting your web wallet like MetaMask. You can connect to Remix much like other web3 services by signing a transaction with your wallet. In your web wallet, select the desired network for deployment; we recommend trying a testnet first like Rinkeby for Ethereum or Mumbai for Polygon. You'll also need some Ether or Matic in your wallet to cover gas fees for deployment.
 
-Note: If you don't already have Polygon integrated with your web wallet, follow these [steps](https://docs.polygon.technology/docs/develop/metamask/config-polygon-on-metamask/) from the Polygon team. For testnet transactions, use these faucets for test Ether and Matic, respectively: [Rinkeby](https://faucets.chain.link/rinkeby) and [Mumbai](https://faucet.polygon.technology/).
+Note: If you don't already have Polygon integrated with your web wallet, follow these [steps](https://docs.polygon.technology/docs/develop/metamask/config-polygon-on-metamask/) released by the Polygon team. For testnet transactions, use these faucets for testnet Ether and Matic, respectively: [Rinkeby](https://faucets.chain.link/rinkeby) and [Mumbai](https://faucet.polygon.technology/).
 
 Once you've configured environment and your wallet, click `Deploy` in Remix. You should see a contract address that will enable you to track contract transactions in a block explorer: [Etherscan](https://etherscan.io/) or [Polygonscan](https://polygonscan.com/).
 
-Steps below for easy verification through HardHat, which will enable read/write interactions in the explorer itself.
+See steps below for easy contract verification through HardHat, which will enable read/write calls from the explorer itself.
 
 ### Deploy with Hardhat (recommended)
 
-Find detailed Hardhat instructions [here](https://hardhat.org/getting-started/) with key steps summarized below.
+Find detailed Hardhat instructions [here](https://hardhat.org/getting-started/), and key steps summarized below.
 
-First, install Hardhat and some key packages (waffle and ethers).
+First, install Hardhat and a few key packages (waffle and ethers).
 
 ```
 npm install --save-dev hardhat
@@ -365,7 +373,7 @@ npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai
 npm install --save-dev @nomiclabs/hardhat-ethers ethers
 ```
 
-Set your directory via `cd` to the folder containing `contracts`. You should see a config file called `hardhat.config.js`. Before compiling your contracts, update the compiler version to `solidity: "0.8.2"` for these contracts. (You can find a sample config file in this repo with some key fields added.)
+Set your directory via `cd` to the folder containing `contracts`. You should see a config file called `hardhat.config.js`. Before compiling your contracts, update the compiler version to at least `solidity: "0.8.2"` for these contracts. (You can find a sample config file in this repo with some required fields added.)
 
 Using Hardhat, compile your smart contracts. This will create artifacts, ABI, and bytecode for deployment and verification.
 
@@ -374,37 +382,49 @@ npx hardhat compile
 ```
 
 Before deployment, you'll need to update the config file with an API key and private key (server and wallet, respectively) for each blockchain you plan to use. We have placeholders for Mumbai, Polygon, Rinkeby, and Ethereum.
-* For servers, [Infura](https://infura.io/) and [Alchemy](https://www.alchemy.com/) are two popular choices that let you get started for free. We set the sample config file to Infura, ready for you to add your API key.
-* For wallet, you just need to export your private key (see steps [here](https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-Export-an-Account-Private-Key) for MetaMask) and paste it into the config's `accounts` field for each applicable blockchain.
+* For servers, [Infura](https://infura.io/) and [Alchemy](https://www.alchemy.com/) are two popular options through which you can get started for free. We set the sample config file to Infura, just waiting for your API key.
+* For a wallet, you'll just need your private key (see steps [here](https://metamask.zendesk.com/hc/en-us/articles/360015289632-How-to-Export-an-Account-Private-Key) to export from MetaMask). Paste the private key into the config file's `accounts` field for each applicable blockchain.
 
-Next, you'll need a `.js` script to deploy your contract. We included a simple sample script for `ParkPics.sol` in this repo that you can modify accordingly. Save your script in the main directory and run the following command. Replace `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file. You'll also want to add `require("@nomiclabs/hardhat-waffle");` and `require("@nomiclabs/hardhat-ethers");` to your config.
+Next, you'll need a `.js` script to deploy your contract. We included a simple sample script for `ParkPics.sol` in this repo that you can modify accordingly. Save your script in the main directory and run the command below. Replace `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file.
+
+You'll also want to add `require("@nomiclabs/hardhat-waffle");` (which implicitly adds `require("@nomiclabs/hardhat-ethers");`) to your config file. Learn more about the Waffle library from the [Hardhat](https://hardhat.org/guides/waffle-testing.html) and [Waffle](https://ethereum-waffle.readthedocs.io/en/latest/index.html) teams.
 
 ```
 npx hardhat run ./scripts/deployMint.js --network <NETWORK>
 
-Example for Mumbai testnet:
+Example for Mumbai testnet using our sample config file:
 npx hardhat run ./scripts/deployMint.js --network mumbai
 ```
 
-That's it. You've deployed your contract using Hardhat. You should see a contract address that you can check in a block explorer to monitor contract transactions.
+That's it. You've deployed your contract using Hardhat. You should see a contract address that you can use in a block explorer to monitor transactions.
 
 ## 4. Verify smart contracts with Hardhat
 
-Once you deploy your smart contracts, you should verify them with the applicable block explorer to enable read/write interactions from the explorer.
+Once you deploy your smart contracts, you should verify them with the applicable block explorer to enable read/write interactions from that explorer.
 
-If you deployed in Remix, you'll just need to follow the above Hardhat steps through compile to use Hardhat for verification. (No need to deploy via Hardhat, but you'll need the artifacts, ABI, and bytecode.)
+If you deployed the contracts in Remix, you'll just need to follow the Hardhat steps above through compilation to use Hardhat for verification. (No need to deploy via Hardhat, but you'll need the artifacts, ABI, and bytecode.)
 
-Before running the following verification command, you'll need to update your config file with an ABI key for Etherscan or Polygonscan, and add `require("@nomiclabs/hardhat-etherscan");`. (See the sample config file for context.)
+Before verifying through Hardhat, you need to add an API key for Etherscan or Polygonscan (easy to set up when you create an account), and `require("@nomiclabs/hardhat-etherscan");` to your config file. (See the sample config file by way of example.)
 
-Install the etherscan package and then run the following verify command, replacing `<NETWORK>` with the applicable blockchain and `<CONTRACT>` with the deployed smart contract's address.
+Install the etherscan package and then run the Hardhat verify command, replacing `<NETWORK>` with the applicable blockchain and `<CONTRACT>` with the deployed contract's address.
 
 ```
 npm install --save-dev @nomiclabs/hardhat-etherscan
 npx hardhat verify --network <NETWORK> <CONTRACT>
 ```
 
-If you get a success message, you should then be able to see your contracts and read/write functions on the applicable block explorer.
+Once you receive a success message, you should be able to view your contracts and their read/write functions on the applicable block explorer. If you connect a web wallet that contains the contract's owner account, you'll be able to execute `onlyOwner` write transactions (like minting) from the explorer.
 
 ## 5. Import collection to OpenSea
 
-*Coming soon*
+With your contracts deployed and verified, you're ready to import the collection to OpenSea. First, navigate to OpenSea's [Get Listed page](https://opensea.io/get-listed). Select the appropriate testnet or mainnet supported by OpenSea (again, we recommend testnet deployment/import before mainnet).
+
+<img width="940" alt="image" src="https://user-images.githubusercontent.com/36116381/149671990-f03262dc-71c8-41a3-8b1a-a01d4623bc8c.png">
+
+Enter the contract address and OpenSea will import your collection.
+
+<img width="940" alt="image" src="https://user-images.githubusercontent.com/36116381/149672146-714e78ba-e3fe-494a-ad55-d0191f07995e.png">
+
+If you sign into OpenSea with the contract's owner address, you'll be able to update collection information. To the extent you included a `contractURI` function, some collection details should already be populated. Since OpenSea doesn't support EIP 2981, as of January 2022, you'll need to manually enter royalty information.
+
+Note: It often takes OpenSea 24 to 48 hours to cache all the metadata for minted NFTs in your collection and then add metadata filter fields.
