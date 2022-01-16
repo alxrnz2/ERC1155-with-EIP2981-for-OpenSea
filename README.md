@@ -11,9 +11,11 @@ This repo contains [OpenZeppelin's](https://docs.openzeppelin.com/contracts/3.x/
 
 You're looking to create a semi-fungible NFT series that's forward-compatible with EIP 2981, allows for easy OpenSea import, and enforces hard caps on tokens/editions.
 
-**Semi-fungible**: ERC 1155's semi-fungible standard refers to a collection that consists of non-fungible tokens, each with multiple fungible editions. For instance, the ParkPics collection featured as an example in this repository includes 14 non-fungible tokens, each of which can be minted up to 10 times in identical (or fungible) editions.
+**Semi-fungible**: ERC 1155's semi-fungible standard refers to a collection consisting of non-fungible tokens, each with multiple fungible editions. For instance, the ParkPics collection featured as an example in this repo includes 14 non-fungible tokens, each of which can be minted up to 10 times in identical (or fungible) editions.
 
-**EIP 2981**: As of January 2022, Ethereum and Polygon NFT royalties are set by exchanges, which makes royalty enforcement challenging. EIP 2981 is a royalty standard that will likely be implemented across NFT exchanges in the near future. The standard's `royaltyInfo` function returns a public address for the intended royalty recipient and a royalty amount in the sale currency. An exchange would query the function with the NFT's `tokenId` and sale price, and then remit royalties accordingly. Note: the royalty payment isn't built into the contract's transfer functions, so we'd still rely on exchanges to certain extent.
+**EIP 2981**: As of January 2022, Ethereum and Polygon NFT royalties are set by exchanges, which makes royalty enforcement challenging. EIP 2981 is a royalty standard that will likely be implemented across NFT exchanges in the near future. The standard's `royaltyInfo` function returns a public address for the intended royalty recipient and a royalty amount in the sale currency. An exchange would query the function with the NFT's `tokenId` and sale price, and then remit royalties accordingly.
+
+Note: The royalty payment isn't built into the contract's transfer functions, so we still rely on exchanges for payment.
 
 **Easy OpenSea import**: As of January 2022, OpenSea remains the largest NFT marketplace. If you're looking to enable OpenSea listing (for primary or secondary sales), they recommend a few additions to OpenZeppelin's standard contracts to streamline integration.
 * Whitelisting the OpenSea proxy contract address enables NFT buyers to list on OpenSea without paying gas fees.
@@ -22,9 +24,13 @@ You're looking to create a semi-fungible NFT series that's forward-compatible wi
 * An override of the `uri` metadata function ensures OpenSea correctly caches token metadata/images without needing to rely on the ERC 1155 ID substitution format.
 * Contract-level metadata pre-populates basic information about the collection upon import.
 
-**Hard caps**: If your token strategy involves scarcity, you'll likely want to include caps in the contract itself to reassure potential buyers. These contracts effectively cap tokens/editions at 14/10, respectively (which you can of course modify).
+Note: These implementations are based on OpenSea support docs that might be outdated. But even if not required with OpenSea's latest releases, at a minimum, the changes shouldn't interfere with your listing.
 
-### High-level instructions
+**Hard caps**: If your token strategy relies on scarcity, you'll likely want to include caps in your contracts to reassure potential buyers. The examples contracts in this repo effectively cap tokens/editions at fourteen/ten, respectively (which you can easily modify).
+
+Note: Our token hard cap could also be implemented in the contract mint functions, as explained below.
+
+### High-level repo instructions (and table of contents)
 
 1) [**Upload/pin token metadata through a decentralized service**](#1-pinupload-token-metadata). We used IPFS and Filecoin in this repo via NFT.storage; Arweave is another popular solution.
 2) [**Adjust and/or update the smart contracts for your project's needs**](#2-create-smart-contracts). If you're just looking to test deployment, you can use the contracts in this repo as-is and experiment using the ParkPics metadata and images. Otherwise, adapt the contracts as desired for your project.
@@ -43,68 +49,76 @@ If you're in this repo, we assume you understand the basics of NFTs and metadata
 
 If new to NFT metadata standards, we recommend these guides from [OpenSea](https://docs.opensea.io/docs/metadata-standards) and [NFT School](http://nftschool.dev.ipns.localhost:8080/reference/metadata-schemas/); if new to content addressing, we recommend these tutorials from ProtoSchool: [Content Addressing](https://proto.school/content-addressing) and [Anatomy of a CID](https://proto.school/anatomy-of-a-cid).
 
-Also, check out this repo [coming soon] for a simple python script that creates token JSONs from a CSV file with metadata traits.
+Also, check out this repo [coming soon] for a simple python script that creates token JSONs from a CSV file containing metadata traits.
 
 ### Recommended tools for pin/upload
 
 For this repo, we used IPFS and Filecoin via two easy tools:
-1) **[IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/)**: Convert token-level images (likely PNGs) and metadata (JSONs) into CARs. You'll need to upload the images first, so you can use the images' CAR in the token JSONs.
+1) **[IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/)**: Convert token-level images (likely PNGs) and metadata (JSONs) into CARs. You'll need to upload the images first, so you can include the images' CAR pins in the token JSONs.
 2) **[NFT.Storage for upload](https://nft.storage/)**: Upload CARs to IPFS and Filecoin servers for decentralized pinning and storage, respectively.
 
 #### IPFS generator for CARs
 
-This [IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/) returns a Content-Addressed Archive (CAR file) with a unique Content Identifier (CID) from the uploaded files. You can use this tool for your token-level metadata (individual JSONs for each token) and images. For instance, the two ParkPics CARs consist of (1) JSONs numbered `1.json` to `14.json` containing each token's metadata (park, feature, type, image URI, etc.), and (2) PNGs numbered `1.png` to `14.png` with the park pictures themselves.
+The [IPFS CAR generator](http://car.ipfs.io.ipns.localhost:8080/) returns a Content-Addressed Archive (CAR file) with a unique Content Identifier (CID) from the uploaded files. You can use this tool for both your token-level metadata (individual JSONs for each token) and images. For instance, the two ParkPics CARs consist of (1) JSONs numbered `1.json` to `14.json` containing each token's metadata (park, feature, type, image URI, etc.), and (2) PNGs numbered `1.png` to `14.png` with the park pictures themselves.
 
-For this smart contract's `uri` function to work, token metadata needs to be stored in a CAR with directory file names matching each token's ID. For instance, token two's metadata should be stored as `2.json` within the CAR. After uploading the token-level metadata and images (separately), you'll be able to download each CAR file.
+For this smart contract's `uri` function to work, token metadata needs to be stored in a CAR with directory file names that match each token's ID. For instance, token two's metadata should be stored as `2.json` within the CAR. After uploading the token-level metadata and images (separately), you'll be able to download each CAR file from the generator.
 
-Reminder: Start with your images, because your JSON files need to include image pins for each token, before you can generate the CAR for metadata.
+Reminder: Start with your images, because your JSON files will need to include image pins for each token before you can generate the metadata CAR.
 
 <img width="740" alt="image" src="https://user-images.githubusercontent.com/36116381/149631861-9a75babf-c590-4b1e-a8a8-16c124cbce71.png">
 
 #### NFT.Storage for CAR upload to IPFS/Filecoin
 
-Once you have the image and metadata CARs, you can use [NFT.Storage](https://nft.storage/), a free service provided by Protocol Labs, to upload those CARs to Filecoin and IPFS servers (see below).
+Once you have the image and metadata CARs, you can use [NFT.Storage](https://nft.storage/), a free service provided by Protocol Labs, to upload those CARs to Filecoin and IPFS servers.
+
+Note: You can also use this tool to upload your contract-level metadata, if desired. (See [below](#contract-level-metadata-in-parkpicssol) for more context).
 
 <img width="865" alt="image" src="https://user-images.githubusercontent.com/36116381/149632270-4cd49ffc-1955-4d94-9de9-53ebfc6de2bc.png">
 
-After uploading via NFT.Storage, you'll be able to view your metadata via the IPFS pins. There may be a slight delay, so give the network at least a few minutes to process your CAR uploads before trying to retrieve files.
+After uploading the CARs via NFT.Storage, you'll be able to view your metadata via the IPFS pins. There may be a slight delay, so give the network at least a few minutes to process your CAR uploads before trying to retrieve files.
 
-Using [Brave](https://brave.com/), a browser that natively integrates IPFS, you can access IPFS via `ipfs://<CAR pin>/<file>`. For instance, ParkPics token one metadata is available via `ipfs://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby/1.json` in Brave. Using a web browser without IPFS integrated, you can access the same metadata via `https://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby.ipfs.dweb.link/1.json`.
+Using [Brave](https://brave.com/), a browser that natively integrates IPFS, you can access IPFS via `ipfs://<pin>/<file>`; for instance, metadata for ParkPics token one is available via `ipfs://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby/1.json`.
+
+Using a web browser without IPFS integrated, you can access the same metadata via `https://bafybeigpo7cmcfkicsee3redrzcwzqsnywvyjehvam4mim3v7ng65titby.ipfs.dweb.link/1.json`.
 
 <img width="952" alt="image" src="https://user-images.githubusercontent.com/36116381/149633191-acb52033-5d92-4a0e-9371-18f82fc74969.png">
 
-Then, using the same retrieval approach in Brave, you can access the token's image via `ipfs://bafybeiatmiig6ylhha5p7o7bxvqutfitv6k2n5ghche4r22tgkmoz6gu5u/1.png`, as provided in the JSON's `image` field (see above).
+Using the same retrieval approach in Brave, you can access the token's image via `ipfs://bafybeiatmiig6ylhha5p7o7bxvqutfitv6k2n5ghche4r22tgkmoz6gu5u/1.png` per the JSON's `image` field (see above). Note: This JSON field illustrates why you need to start with the images CAR.
 
 <img width="959" alt="image" src="https://user-images.githubusercontent.com/36116381/149633212-f3dde4f9-e377-429b-90e3-edb7eb1840c2.png">
 
-To display images and metadata for NFTs, services like OpenSea retrieve and cache that data following these same steps, albeit less manually.
+To display images and metadata for NFTs, services like OpenSea retrieve and cache your collection's data following these same steps, albeit less manually.
 
-Note: There are many other ways to pin/upload metadata and images to IPFS and Arweave. And to the extent you don't want to use CARs, you'll need to adjust the smart contracts' `uri` function and `PermanentURI` events accordingly.
+#### Notes on pin/upload
+
+There are many other approaches to pin/upload metadata to IPFS and Arweave. We just picked two easy tools that require limited technical knowledge. And to the extent you don't want to use CARs, you'll just need to adjust the smart contracts' `uri` function and `PermanentURI` events accordingly.
 
 ## 2. Create smart contracts
+
+This repo assumes basic knowledge of Solidity. If you're new to the language, we recommend this [tutorial](https://cryptozombies.io/en).
 
 ### OpenZeppelin Wizard
 
 We started with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard) to create the base ERC 1155 contracts.
-* **Functions**: Mintable and Pausable (allows for owner minting and contract pausing, in the extent something goes wrong)
-* **Access Control**: Ownable (one account can mint, pause, etc., versus segregated permissions for multiple accounts)
+* **Functions**: We selected Mintable and Pausable (allows for owner minting and contract pausing, in the event something goes wrong).
+* **Access Control**: We selected Ownable (one account can mint, pause, etc., versus segregated permissions for multiple accounts).
 
-If you'd like to change these presets, it's probably easiest to start with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard), download your new contracts, and then manually incorporate EIP 2981 royalties and the OpenSea-specific changes, as documented below.
+If you'd like to change these presets, it's probably easiest to start with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard), download your new contracts, and then manually incorporate EIP 2981 royalties, the OpenSea-specific changes, and token/edition hard caps, as documented below.
 
 <img width="368" alt="image" src="https://user-images.githubusercontent.com/36116381/149416526-95de8b9b-e49e-4f8e-9b7a-25c2c6984c2e.png">
 
 ### EIP 2981 royalties
 
-EIP 2981 includes two key functions: `royaltyInfo` and `supportsInterface`. In addition to those functions, we implemented the ability to change the royalty recipient. To remove that flexibility, replace `_recipient` with the desired recipient public address.
+EIP 2981 includes two key functions: `royaltyInfo` and `supportsInterface`. In addition to those functions, we included an `onlyOwner` ability to change royalty recipient. To remove that flexibility, replace `_recipient` in the `royaltyInfo` function with the desired recipient public address and delete the two `setRoyalties` functions.
 
-All EIP 2981 required functions were implemented in the token contract, [`ParkPics.sol`](contracts/ParkPics.sol) in this example.
+In this example, all functions required by EIP 2981 were implemented in [`ParkPics.sol`](contracts/ParkPics.sol).
 
 #### Import the EIP 2981 interface in `ParkPics.sol`
 ```
 import "./@openzeppelin/contracts/interfaces/IERC2981.sol";
 ```
 
-The best practice with any standard implementation is to start with an interface. The `IERC2981.sol` `royaltyInfo` function is then overriden in `ParkPics.sol` (see below).
+Best practice with any standards implementation is to start with an interface. We then override the `IERC2981.sol` `royaltyInfo` function in `ParkPics.sol` (see below).
 
 #### `royaltyInfo` function in `ParkPics.sol`
 ```
@@ -113,11 +127,11 @@ function royaltyInfo(uint256 _tokenId, uint256 _salePrice) external view overrid
 }
 ```
 
-When called, this function returns royalty recipient and amount, indifferent as to sale currency. We set royalties at 10% or 1,000 basis points; to set a different percentage, just adjust the `1000` to your desired royalty in basis points.
+When called, this function returns royalty recipient and amount, indifferent as to sale currency. We set royalties at 10% or 1,000 basis points; to set a different percentage, just adjust the `1000` to your desired royalty share (in basis points).
 
-Note: royalties are not built into the contract's `transfer` functions, which do not have an input for sales price. Instead, the NFT owner delegates the ability to transfer to NFT exchanges via the `setApprovalForAll` function in `ERC1155.sol`, then the exchange initiates a (1) token transfer once the listing price is fulfilled and (2) royalty payout, which is currently based on information provided to each exchange by the collection creator (for OpenSea, the contract owner needs to populate royalty recipient and amount manually on their site when updating collection information).
+Note: Royalties are not built into the contract's `transfer` functions, which don't have an input for sales price. Instead, for secondary sales, the token owner generally delegates transfer ability to exchanges via the `setApprovalForAll` function in `ERC1155.sol`. Then, the exchange initiates (1) token transfer once the listing price is fulfilled and (2) royalty payout, which is currently based on information provided to each exchange by the collection creator (for OpenSea, the contract owner needs to populate royalty recipient and amount manually on their site when updating collection information). If an owner gifts or moves their token to a different wallet address via the `transfer` functions, no royalty will be triggered.
 
-Reputable exchanges tend to follow community standards, which we expect EIP 2981 to become in the near future. Thus, we're including these functions for forward compatibility, even if most exchanges don't follow EIP 2981 today (January 2022).
+Reputable exchanges tend to follow community standards, which we expect EIP 2981 to become in the future. Therefore, we're including EIP 2981 functions for forward compatibility, even if most exchanges don't follow the standard as of January 2022.
 
 #### supportsInterface override in `ParkPics.sol`
 ```
@@ -126,7 +140,7 @@ function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1
 }
 ```
 
-This function signals that the contract is compatible with EIP 2981, in addition to ERC 1155 and ERC 165 (via `super`).
+This function signals the contract is compatible with EIP 2981, in addition to ERC 1155 and ERC 165 (via the `super` call).
 
 #### Maintain flexibilty to change royalty recipient in `ParkPics.sol`
 ```
@@ -147,13 +161,15 @@ function setRoyalties(address newRecipient) external onlyOwner {
 }
 ```
 
-These additions create a private varible for royalty recipient address, define that address as the contract owner upon deployment in the constructor, and create an `onlyOwner` function to update that recipient address in the future. If you don't need this flexibility, feel free to delete the variable, constructor definition, and `setRoyalties` functions, and replace `_recipient` in the `royaltyInfo` function with a static public address for the desired recipient.
+These additions (1) create a private varible for royalty recipient address, (2) define that address as the contract owner upon deployment in the constructor, and (3) create an `onlyOwner` function to update that recipient address in the future.
+
+If you don't need the flexibility to change recipient, feel free to delete the variable, constructor definition, and `setRoyalties` functions, and replace `_recipient` in the `royaltyInfo` function with a static public address for the desired recipient.
 
 ### OpenSea-specific changes
 
-These OpenSea additions enable whitelisting, meta-transactions, a permanent metadata event, token metadata override, and contract-level metadata. Some of these additions may be redundant given recent OpenSea infrastructure changes, but to cover all bases, we pieced together and implemented each per OpenSea's developer docs.
+The following OpenSea additions enable whitelisting, meta-transactions, a permanent token metadata event, token metadata override, and contract-level metadata. These changes were implemented in [`ParkPics.sol`](contracts/ParkPics.sol) and [`ERC1155.sol`](contracts/@openzeppelin/contracts/token/ERC1155/ERC1155.sol).
 
-These changes were implemented in [`ParkPics.sol`](contracts/ParkPics.sol) and [`ERC1155.sol`](contracts/@openzeppelin/contracts/token/ERC1155/ERC1155.sol).
+Note: Some of these additions may be redundant and/or uneccessary, but to cover all bases, we pieced together and implemented each per OpenSea's developer docs.
 
 #### Whitelisting in `ERC1155.sol`
 ```
@@ -167,7 +183,7 @@ function isApprovedForAll(...) ... (...) {
 }
 ```
 
-The `if` addition above automatically approves a token owner's listing on OpenSea without requiring the owner to pay gas fees for the approval transaction. If you'd like to add additional marketplace addresses, you can use the `||` operator ("or" operator in Solidity) to add those marketplace addresses to the `if` statement.
+The `if` addition automatically approves a token owner's OpenSea listing without requiring the owner to pay gas fees for an approval transaction. If you'd like to add additional marketplace addresses, you can use `||` operators ("or" operator in Solidity) to add those addresses to the `if` statement.
 
 #### Meta-transactions in `ParkPics.sol` via import of `ContextMixin.sol`
 ```
@@ -213,7 +229,7 @@ function _mintBatch(...) ... {
 }
 ```
 
-OpenSea looks for a `PermanentURI` event to determine if a token's metadata is frozen. The event simply emits the URI for each token as they're minted. Since we also need to return the URI in the token contract, `ParkPics.sol`, we define `_uriBase` as an internal variable that can be called in the token contract `uri` function.
+OpenSea looks for a `PermanentURI` event to determine a token's metadata is frozen. The event simply emits the URI for each token when minted. Since we also need to return the URI in the token contract (`ParkPics.sol`), we define `_uriBase` as an internal variable that can be called in the token contract `uri` function.
 
 Learn more [here](https://docs.opensea.io/docs/metadata-standards).
 
@@ -225,7 +241,9 @@ function uri(uint256 tokenId) override public view returns (string memory) {
 }
 ```
 
-Rather than relying on marketplaces to support the ERC 1155 [ID substitution method](https://docs.openzeppelin.com/contracts/3.x/api/token/erc1155#IERC1155MetadataURI) for token metadata, we overrode the function to return an IPFS pin for the token's applicable JSON file. For our function to work properly, metadata needs to be stored in a Content-Addressed Archive (CAR). Use this [tool](http://car.ipfs.io.ipns.localhost:8080/) to convert metadata into CARs for upload.
+Rather than relying on marketplaces to support the ERC 1155 [ID substitution method](https://docs.openzeppelin.com/contracts/3.x/api/token/erc1155#IERC1155MetadataURI) for token metadata, we overrode the function to return an IPFS pin for the token's applicable JSON file.
+
+For our function to work properly, metadata needs to be stored in a Content-Addressed Archive (CAR). See [above](#1-pinupload-token-metadata) for details on metadata pinning/upload.
 
 #### Contract-level metadata in `ParkPics.sol`
 ```
@@ -243,7 +261,7 @@ function contractURI() public pure returns (string memory) {
 }
 ```
 
-Upon importing the contract to OpenSea, contract-level metadata will now pre-populate in the applicable collection fields.
+Upon importing the contract to OpenSea, contract-level metadata will now pre-populate in the applicable collection fields. You can override collection details in OpenSea as desired.
 
 ### Hard caps on token supply and editions
 
@@ -264,7 +282,7 @@ function uri(...) ... (...) {
 }
 ```
 
-Our `require` function effectively limits the total token supply by blocking metadata retrieval above the token hard cap (token 14 for ParkPics). Alternatively, we could implement this limit through the mint functions via additional `require` functions, similar to the editions caps below.
+Our `require` function effectively limits the total token supply by blocking metadata retrieval above the token hard cap (e.g., token fourteen for ParkPics). Alternatively, we could implement this limit through the contracts' mint functions via additional `require` hooks, similar to the edition cap below.
 
 #### Edition hard cap in `ERC1155.sol`
 ```
@@ -302,20 +320,20 @@ function _mintBatch(...) ... {
 }
 ```
 
-Each time a new NFT is minted, the edition counter is updated. In this sample collection, those editions are capped at 10 each in the constructor, after which the mint functions throw errors. As mentioned above, a token supply limit could be implemented in a similar manner through these mint functions.
+Each time a new token is minted, the edition counter is updated. In this sample collection, those editions are capped at ten each in the constructor, after which the mint functions throw an error message. As mentioned above, a token supply limit could be implemented in a similar manner through these mint functions.
 
 ### Other contract notes
 
-* **Minting factory**: We did not include a minting factory in this repo. All tokens are minted by the owner and then transfered or listed for sale by the owner. An additional factory contract would be required to enable minting at a set price or through an auction.
-* **OpenSea additions and hard caps**: If you don't need the OpenSea additions and/or token/edition hard caps, we recommend starting with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard) and then implementing EIP 2918 royalties per the above steps.
+* **Minting factory**: We didn't include a minting factory in this repo. All tokens are minted by the owner and then transfered or listed for sale by the owner. An additional factory contract would be required to enable minting at a set price or through an auction.
+* **OpenSea additions and hard caps**: If you don't need the OpenSea additions and/or token/edition hard caps, we recommend starting with the [OpenZeppelin Wizard](https://docs.openzeppelin.com/contracts/4.x/wizard) and then implementing EIP 2918 royalties per the steps above.
 
-### Changes required to use these contracts for a different collection
+### Changes required to use these contracts as-is for a different collection
 
 #### In the token contract ([`ParkPics.sol`](contracts/ParkPics.sol), to be renamed)
 1) Change `ParkPics.sol` file name (not strictly required, but recommended).
 2) Change `ParkPics` contract name (also not strictly required, but recommended).
 3) In the constructor, update `name`, `symbol` and `total_supply`. If you're looking to maintain flexibility to expand token count in the future, remove `total_supply` in the constructor and from the `uri` function.
-4) In the `contractURI` function, change the pin to your collection-level metadata. You can remove this function, if not needed, without impacting other functions in the contracts.
+4) In the `contractURI` function, change the pin to your collection-level metadata. If not needed, you can remove `contractURI` without impacting other functions in the contracts.
 
 #### In [`ERC1155.sol`](contracts/@openzeppelin/contracts/token/ERC1155/ERC1155.sol)
 1) In the constructor, update `_uriBase` for your token-level metadata CAR.
@@ -323,27 +341,29 @@ Each time a new NFT is minted, the edition counter is updated. In this sample co
 
 ## 3. Deploy smart contracts
 
-Once you've refined your smart contracts, save them in a subfolder/directory `contracts` within the folder/directory you're using for deployment. It's best practice, and Hardhat will specifically look for a `contracts` subdirectory when compiling contracts.
+Once you've finalized your smart contracts, we recommend saving them in a subfolder `contracts` within the folder you're using for deployment. Hardhat will specifically look for a `contracts` subdirectory when compiling contracts.
 
-To the extent you reorganize the `contracts` subdirectories from this repo, be sure to also update the `import` calls in each contract accordingly.
+To the extent you reorganize the `contracts` subdirectories in this repo, be sure to update the `import` calls in each contract accordingly.
 
 <img width="263" alt="image" src="https://user-images.githubusercontent.com/36116381/149635193-c892afb3-162d-4e68-a667-abdd8006513d.png">
 
-To execute the commands below on a windows machine, we generally use a [Git Bash](https://git-scm.com/downloads) [terminal](https://code.visualstudio.com/docs/editor/integrated-terminal) in [VS Code](https://code.visualstudio.com/), but there are plenty of other options.
+To execute the commands below on a Windows machine, we generally recommend a [Git Bash](https://git-scm.com/downloads) [terminal](https://code.visualstudio.com/docs/editor/integrated-terminal) in [VS Code](https://code.visualstudio.com/). But, there are plenty of other options.
 
 ### Deploy with Remix IDE (easiest)
 
-Remix IDE is a web-based development environment designed for Solidity smart contracts. You can easily connect web wallets to Remix and deploy contracts without adding private keys to a config file, etc., which also allows for easy deployment from a hardware wallet that's connected through your web wallet (like [Ledger via MetaMask](https://www.ledger.com/academy/security/the-safest-way-to-use-metamask). For security purposes, we recommend this approach.
+Remix IDE is a web-based development environment designed for Solidity smart contracts. You can easily connect web wallets to Remix and deploy contracts without needing to add private keys to a config file, which also allows for easy deployment from a hardware wallet (like [Ledger via MetaMask](https://www.ledger.com/academy/security/the-safest-way-to-use-metamask). For security purposes, we recommend deploying to the mainnet with a hardward wallet as owner.
 
-When you open [Remix](https://remix.ethereum.org/), you'll see a sample workspace with some simple, sample smart contracts. While there are a few ways to upload your updated smart contracts, we'll use `-connect to localhost-` via `remixd` from the workspace dropdown menu. Find a detailed tutorial for `remixd` [here](https://remix-ide.readthedocs.io/en/latest/remixd.html), and summarized below.
+When you open [Remix](https://remix.ethereum.org/), you'll see a sample workspace with some sample smart contracts.
 
 <img width="956" alt="image" src="https://user-images.githubusercontent.com/36116381/149635085-9c92e8ec-dca8-40f8-89c9-7bd0fd7f0e80.png">
 
-#### Install Remixd to connect Remix to your local computer
+While Remix offers a few options to upload smart contracts, we'll use `-connect to localhost-` via `remixd` from the workspace dropdown menu. Find a detailed tutorial for `remixd` [here](https://remix-ide.readthedocs.io/en/latest/remixd.html), and summarized below.
 
-First, you'll need `npm` and `node`. Follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) if not already installed. On your desktop, we recommend opening the folder containing subfolder `contracts` in an IDE like VS Code. (Not strictly required, but it'll make it easier to verify your contracts via Hardhat later.)
+#### Install Remixd to connect Remix to your computer
 
-Once you've installed `npm` and `node`, install `remixd` via a VS Code terminal like [Git Bash](https://git-scm.com/downloads) or through another command line interface (CLI).
+First, you'll need `npm` and `node`; if not already installed, follow these [steps](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm). Once you've installed `npm` and `node`, install `remixd`.
+
+On your desktop, we recommend opening the folder that contains subfolder `contracts` in an IDE like VS Code, then running these commands. This appraoch isn't strictly required, but it'll make it easier to verify your contracts via Hardhat and edit your smart contracts (for VS Code, you'll want to install an extension for Solidity like this popular [option](https://marketplace.visualstudio.com/items?itemName=JuanBlanco.solidity)).
 
 ```
 npm install -g @remix-project/remixd
@@ -375,7 +395,7 @@ Find detailed Hardhat instructions [here](https://hardhat.org/getting-started/),
 
 #### Install Hardhat
 
-First, install Hardhat and a few key packages (waffle and ethers).
+First, install Hardhat and a few key packages (waffle and ethers) for testing.
 
 ```
 npm install --save-dev hardhat
@@ -410,17 +430,17 @@ Example for Mumbai testnet using our sample config file:
 npx hardhat run ./scripts/deployMint.js --network mumbai
 ```
 
-That's it. You've deployed your contracts using Hardhat. You should see a contract address that you can use in a block explorer to monitor transactions.
+That's it; you've deployed your contracts via Hardhat. You should see a contract address that you can use in a block explorer.
 
 ## 4. Verify smart contracts with Hardhat
 
-Once you deploy your smart contracts, you should verify them with the applicable block explorer to enable read/write interactions from that explorer.
+After deploying your smart contracts, you should verify them with the applicable block explorer to enable read/write interactions from that explorer and easy auditing.
 
-If you deployed the contracts in Remix, you'll just need to follow the Hardhat steps above through compilation to use Hardhat for verification. (No need to deploy via Hardhat, but you'll need the artifacts, ABI, and bytecode.)
+If you deployed the contracts in Remix, you'll just need to follow the Hardhat steps above through compilation and then use Hardhat for verification. (No need to deploy via Hardhat, but you'll need the artifacts, ABI, and bytecode.)
 
-Before verifying through Hardhat, you need to add an API key for Etherscan or Polygonscan (easy to set up when you create an account), and `require("@nomiclabs/hardhat-etherscan");` to your config file. (See the sample config file by way of example.)
+Before verifying through Hardhat, you need to add an API key for Etherscan or Polygonscan (easy to set up when you create an account) and `require("@nomiclabs/hardhat-etherscan");` to your config file. (By way of example, see the sample config file.)
 
-Install the etherscan package and then run the Hardhat verify command, replacing `<NETWORK>` with the applicable blockchain and `<CONTRACT>` with the deployed contract's address.
+Install the etherscan package (works for Polygonscan too with an API key) and then run the Hardhat verify command, replacing `<NETWORK>` with the applicable blockchain and `<CONTRACT>` with the deployed contract's address.
 
 ```
 npm install --save-dev @nomiclabs/hardhat-etherscan
@@ -429,18 +449,20 @@ npx hardhat verify --network <NETWORK> <CONTRACT>
 
 Once you receive a success message, you should be able to view your contracts and their read/write functions on the applicable block explorer. If you connect a web wallet that contains the contract's owner account, you'll be able to execute `onlyOwner` write transactions (like minting) from the explorer.
 
+<img width="521" alt="image" src="https://user-images.githubusercontent.com/36116381/149675382-5cde7396-e4c2-4dbd-b088-6423d45881cb.png">
+
 ## 5. Import collection to OpenSea
 
-With your contracts deployed and verified, you're ready to import the collection to OpenSea. First, navigate to OpenSea's [Get Listed page](https://opensea.io/get-listed). Select the appropriate testnet or mainnet supported by OpenSea (again, we recommend testnet deployment/import before mainnet).
+With your contracts deployed and verified, you're now ready to import the collection to OpenSea. First, navigate to OpenSea's [Get Listed page](https://opensea.io/get-listed). Select the appropriate testnet or mainnet, as supported by OpenSea (again, we recommend testnet deployment/import before mainnet).
 
 <img width="940" alt="image" src="https://user-images.githubusercontent.com/36116381/149671990-f03262dc-71c8-41a3-8b1a-a01d4623bc8c.png">
 
-Enter the contract address and OpenSea will import your collection.
+Enter the contract address, and OpenSea will import your collection.
 
 <img width="940" alt="image" src="https://user-images.githubusercontent.com/36116381/149672146-714e78ba-e3fe-494a-ad55-d0191f07995e.png">
 
-If you sign into OpenSea with the contract's owner address, you'll be able to update collection information. To the extent you included a `contractURI` function, some collection details should already be populated.
+If you sign into OpenSea with the contract's owner address, you'll be able to update collection information. To the extent you included a `contractURI` function, some collection details should be prepopulated.
 
-Since OpenSea doesn't support EIP 2981, as of January 2022, you'll need to manually enter royalty information. If that changes in the future, your contracts should be forward compatible.
+Since OpenSea doesn't currently support EIP 2981 (as of January 2022), you'll need to manually enter royalty information. If that changes in the future, your contracts should be forward compatible.
 
 Note: It often takes OpenSea 24 to 48 hours to cache all the metadata for minted NFTs in your collection and then add the metadata filter fields, so be patient.
