@@ -163,7 +163,7 @@ function setRoyalties(address newRecipient) external onlyOwner {
 }
 ```
 
-These additions (1) create a private varible for royalty recipient address, (2) define that address as the contract owner upon deployment in the constructor, and (3) create an `onlyOwner` function to update that recipient address in the future.
+These additions (1) create a private variable for royalty recipient address, (2) define that address as the contract owner upon deployment in the constructor, and (3) create an `onlyOwner` function to update that recipient address in the future.
 
 If you don't need the flexibility to change recipient, feel free to delete the variable, constructor definition, and `setRoyalties` functions, and replace `_recipient` in the `royaltyInfo` function with a static public address for the desired recipient.
 
@@ -331,6 +331,8 @@ Each time a new token is minted, the edition counter is updated. In this sample 
 
 ### Changes required to use these contracts as-is for a different collection
 
+If you don't need to change the contracts as drafted in this repo, simply follow the steps below to update key variables to suit your project (e.g., contract name, token supply, and metadata pins).
+
 #### In the token contract ([`ParkPics.sol`](contracts/ParkPics.sol), to be renamed)
 1) Change `ParkPics.sol` file name (not strictly required, but recommended).
 2) Change `ParkPics` contract name (also not strictly required, but recommended).
@@ -383,7 +385,7 @@ Returning to Remix in your web brower, select `-connect to localhost-` and `Cont
 
 First, select the token contract (`ParkPics.sol` in our sample contracts) in the `File Explorer` tab. Then, in the `Solidity Compiler` tab, select a compiler version at least as recent as that specified in the contracts (0.8.2 per `pragma solidity ^0.8.2;` at the top of `ParkPics.sol`) and click `Compile <CONTRACT>`. Finally, in the `Deploy & Run Transactions` tab, select your environment and owner wallet (see below), and deploy the token contract.
 
-To test integration with OpenSea, we recommend using `Injected Web3` for the environment and connecting your web wallet like MetaMask. You can connect to Remix much like other web3 services by signing a transaction with your wallet. In your web wallet, select the desired network for deployment; we recommend trying a testnet first like Rinkeby for Ethereum or Mumbai for Polygon.
+To test integration with OpenSea, we recommend using `Injected Web3` for the environment and connecting a web wallet like MetaMask. You can connect to Remix much like other web3 services by signing a transaction with your wallet. In your web wallet, select the desired network for deployment; we recommend trying a testnet first like Rinkeby for Ethereum or Mumbai for Polygon.
 
 Note: If you don't already have Polygon integrated with your web wallet, follow these [steps](https://docs.polygon.technology/docs/develop/metamask/config-polygon-on-metamask/) released by the Polygon team. You'll also need some Ether or Matic in your wallet to cover gas fees for deployment. For testnet transactions, use these faucets for testnet Ether and Matic, respectively: [Rinkeby](https://faucets.chain.link/rinkeby) and [Mumbai](https://faucet.polygon.technology/).
 
@@ -397,7 +399,7 @@ Find detailed Hardhat instructions [here](https://hardhat.org/getting-started/),
 
 #### Install Hardhat
 
-First, install Hardhat and a few key packages (waffle and ethers).
+First, install Hardhat and a few key packages (waffle, ethers, and etherscan).
 
 ```
 npm install --save-dev hardhat
@@ -406,7 +408,7 @@ npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai @nomiclabs
 
 #### Compile your contracts
 
-Set your directory via `cd` to the folder containing `contracts`. You should see a config file called `hardhat.config.js`. Before compiling your contracts, update the compiler version to at least `solidity: "0.8.2"` for these contracts. (You can find a sample config file in this repo with some required fields added.)
+Set your directory via `cd` to the folder containing subfolder `contracts`. You should see a config file called `hardhat.config.js`. Before compiling your contracts, update the compiler version to at least `solidity: "0.8.2"` for these contracts. (You can find a sample config file in this repo with some required fields added.)
 
 Using Hardhat, compile your smart contracts. This will create artifacts, ABI, and bytecode for deployment and verification.
 
@@ -422,9 +424,9 @@ Before deployment, you'll need to update the config file with an API key and pri
 
 Next, you'll need a `.js` script to deploy your contract. We included a simple sample [script](scripts/deploy.js) for `ParkPics.sol` in this repo that you can modify accordingly.
 
-In the command below, replace `<SCRIPT-PATH>` with your script path/filename and `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file, and run the command.
+In the command below, replace `<SCRIPT-PATH>` with your script path/filename and `<NETWORK>` with your desired blockchain, consistent with the spelling/case of the labels in your config file, and run the command below.
 
-You'll also want to add `require("@nomiclabs/hardhat-waffle");`, which implicitly adds `require("@nomiclabs/hardhat-ethers");`, to your config file. Learn more about the Waffle library from the [Hardhat](https://hardhat.org/guides/waffle-testing.html) and [Waffle](https://ethereum-waffle.readthedocs.io/en/latest/index.html) teams.
+You'll also want to add `require("@nomiclabs/hardhat-waffle");`, which implicitly adds `ethers`, to your config file. Learn more about the Waffle library from the [Hardhat](https://hardhat.org/guides/waffle-testing.html) and [Waffle](https://ethereum-waffle.readthedocs.io/en/latest/index.html) teams.
 
 ```
 npx hardhat run <SCRIPT-PATH> --network <NETWORK>
