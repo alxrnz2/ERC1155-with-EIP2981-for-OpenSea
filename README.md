@@ -401,8 +401,7 @@ First, install Hardhat and a few key packages (waffle and ethers).
 
 ```
 npm install --save-dev hardhat
-npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai
-npm install --save-dev @nomiclabs/hardhat-ethers ethers
+npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai @nomiclabs/hardhat-ethers ethers
 ```
 
 #### Compile your contracts
